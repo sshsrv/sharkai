@@ -40,22 +40,44 @@ import {
 } from '../components.js';
 
 /**
+ * Emoji de modelo/provider (custom emojis del usuario).
+ * Se muestra en el footer del /sh ask y en el selector de modelos.
+ */
+const MODEL_EMOJI: Record<string, string> = {
+	// OpenAI (gpt-oss)
+	'openai/gpt-oss-120b': '<:openai:1547015408110800967>',
+	'openai/gpt-oss-20b': '<:openai:1547015408110800967>',
+	'openai/gpt-oss-safeguard-20b': '<:openai:1547015408110800967>',
+	// Qwen
+	'qwen/qwen3.6-27b': '<:qwen:1547015425496195073>',
+	'qwen/qwen3.8-27b': '<:qwen:1547015425496195073>',
+	// Groq nativos
+	'groq/compound': '<:groq:1547015390939320320>',
+	'groq/compound-mini': '<:groq:1547015390939320320>',
+	// Google
+	'gemini-2.5-flash': '<:google:1547015367174397952>',
+	'gemini-2.5-flash-lite': '<:google:1547015367174397952>',
+	'gemini-3-flash': '<:google:1547015367174397952>',
+	'gemini-3.1-flash-lite': '<:google:1547015367174397952>',
+	'gemini-3.5-flash': '<:google:1547015367174397952>',
+	'gemini-3.5-flash-lite': '<:google:1547015367174397952>',
+	'gemini-3.6-flash': '<:google:1547015367174397952>',
+	'gemini-3.7-flash': '<:google:1547015367174397952>',
+	'gemini-3.8-flash': '<:google:1547015367174397952>',
+};
+
+function modelEmoji(id: string): string {
+	return MODEL_EMOJI[id] ?? '';
+}
+
+/**
  * Selector de modelos: aquí (y solo aquí, más la info del modelo y /sh usage)
- * se muestra el provider de cada modelo.
+ * se muestra el provider de cada modelo. El emoji va delante del nombre.
  */
 const MODEL_CHOICES = CHAT_MODEL_IDS.map((id) => ({
-	name: `${MODELS[id].name} (${PROVIDER_LABEL[MODELS[id].provider]})`,
+	name: `${modelEmoji(id)} ${MODELS[id].name} (${PROVIDER_LABEL[MODELS[id].provider]})`,
 	value: id,
 }));
-
-// Emoji de modelo (custom emojis del usuario). Solo en el footer del /sh ask.
-const MODEL_EMOJI: Record<string, string> = {
-	'openai/gpt-oss-120b': '<:gpt:1546977679461449839>',
-	'openai/gpt-oss-20b': '<:gpt:1546977679461449839>',
-	'openai/gpt-oss-safeguard-20b': '<:gpt:1546977679461449839>',
-	'qwen/qwen3.6-27b': '<:qwen:1546977696792318022>',
-	'qwen/qwen3.8-27b': '<:qwen:1546977696792318022>',
-};
 
 // Cooldown por usuario para no castigar el rate limit del free tier.
 const COOLDOWN_MS = Math.max(0, parseInt(process.env.COOLDOWN_SECONDS ?? '3', 10) || 0) * 1000;
@@ -233,7 +255,7 @@ async function handleAsk(interaction: ChatInputCommandInteraction): Promise<void
 		lastAsk.set(interaction.user.id, Date.now());
 		const result = await ask(question, overrideModel, interaction.user.id);
 		const model = result.model;
-		const emoji = MODEL_EMOJI[model];
+		const emoji = modelEmoji(model);
 
 		// Guardar en la ventana de contexto (se poda a HISTORY_LIMIT automáticamente).
 		appendHistory(interaction.user.id, 'user', question);

@@ -28,11 +28,19 @@ Todas las respuestas usan **Components V2** de Discord (nuevo sistema de mensaje
 |Qwen 3.8 27B|`qwen/qwen3.8-27b`|Groq|8,000|1,000|1,000|
 |Groq Compound|`groq/compound`|Groq|70,000|250|250|
 |Groq Compound Mini|`groq/compound-mini`|Groq|70,000|250|250|
-|Gemini 2.5 Flash|`gemini-2.5-flash`|Google|250,000|10|250|
-|Gemini 2.5 Flash-Lite|`gemini-2.5-flash-lite`|Google|250,000|15|1,000|
-|Gemini 2.5 Pro|`gemini-2.5-pro`|Google|250,000|5|100|
+|Gemini 2.5 Flash|`gemini-2.5-flash`|Google|250,000|5|20|
+|Gemini 2.5 Flash-Lite|`gemini-2.5-flash-lite`|Google|250,000|10|20|
+|Gemini 3 Flash|`gemini-3-flash`|Google|250,000|5|20|
+|Gemini 3.1 Flash-Lite|`gemini-3.1-flash-lite`|Google|250,000|15|500|
+|Gemini 3.5 Flash|`gemini-3.5-flash`|Google|250,000|5|20|
+|Gemini 3.5 Flash-Lite|`gemini-3.5-flash-lite`|Google|250,000|15|500|
+|Gemini 3.6 Flash|`gemini-3.6-flash`|Google|250,000|5|20|
+|Gemini 3.7 Flash|`gemini-3.7-flash`|Google|250,000|5|20|
+|Gemini 3.8 Flash|`gemini-3.8-flash`|Google|250,000|5|20|
 
 Las preferencias (modelo, prompt, idioma) se guardan por usuario en `data/prefs.json` (persistente vía volumen Docker).
+
+Cada modelo lleva su emoji de provider en el footer y el selector: <:openai:1547015408110800967> (GPT-OSS), <:qwen:1547015425496195073> (Qwen), <:groq:1547015390939320320> (Compound) y <:google:1547015367174397952> (Gemini).
 
 ## Uso compartido
 
