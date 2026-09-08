@@ -9,7 +9,6 @@ DATA_DIR="${DATA_DIR:-/app/data}"
 echo "[sharkai] data=$DATA_DIR poll=${POLL_SECONDS}s branch=$GIT_BRANCH"
 
 # El repo vive en el volumen sharkai-code (montado en /app).
-# Si no hay .git: el volumen está vacío → clonar el repo sobre /app.
 if [ ! -d /app/.git ]; then
   echo "[sharkai] /app vacío — clonando $GIT_REPO..."
   rm -rf /tmp/sharkai-clone
@@ -21,13 +20,23 @@ fi
 
 cd /app
 
+# Si el lock quedó en modo producción (solo deps), reinstalar completo para poder buildear
+if [ ! -x node_modules/.bin/tsc ] || [ ! -x node_modules/.bin/tsx ]; then
+  echo "[sharkai] Reinstalando dependencias completas (faltan devDeps)..."
+  rm -rf node_modules package-lock.json
+  npm install --include=dev >/dev/null 2>&1 || { echo "[sharkai] ERROR npm install"; exit 1; }
+fi
+
 last_head=""
 BOT_PID=""
 
 start_bot() {
-  echo "[sharkai] npm install + build..."
-  npm install --omit=dev >/dev/null 2>&1 || true
-  npm run build || true
+  echo "[sharkai] build..."
+  npm run build >/dev/null 2>&1 || { echo "[sharkai] ERROR build"; exit 1; }
+  if [ ! -f dist/index.js ]; then
+    echo "[sharkai] ERROR: no existe dist/index.js"
+    exit 1
+  fi
   echo "[sharkai] Arrancando node dist/index.js"
   node dist/index.js &
   BOT_PID=$!
@@ -46,7 +55,6 @@ stop_bot() {
 start_bot
 trap stop_bot INT TERM
 
-# Watcher de auto-update: pull cada POLL_SECONDS y reinicio si hay cambios
 while true; do
   sleep "$POLL_SECONDS"
   cd /app
