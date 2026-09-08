@@ -13,15 +13,19 @@ Bot de Discord en TypeScript (discord.js) que usa **Groq** (plan gratuito) para 
 | `/ai status` | Muestra tu config actual (modelo, idioma, prompt). |
 | `/ai reset` | Reinicia todos tus ajustes a los valores por defecto. |
 
-## Modelos gratuitos (Groq free tier)
+## Modelos gratuitos (Groq free tier — chat, sep 2026)
 
-| Modelo | TPM | RPM | RPD | Contexto |
+| Modelo | Model ID | TPM | RPM | RPD |
 |---|---|---|---|---|
-| llama-3.3-70b-versatile | 6,000 | 30 | 1,000 | 128K |
-| llama-3.1-8b-instant | 6,000 | 30 | 1,000 | 128K |
-| qwen-2.5-coder-32b | 6,000 | 30 | 1,000 | 128K |
-| gemma2-9b-it | 6,000 | 30 | 1,000 | 8K |
-| llama-4-maverick-17b-128e-instruct (multimodal 🌄) | 6,000 | 30 | 1,000 | 128K |
+| GPT-OSS 120B | `openai/gpt-oss-120b` | 8,000 | 30 | 1,000 |
+| GPT-OSS 20B | `openai/gpt-oss-20b` | 8,000 | 30 | 1,000 |
+| GPT-OSS Safeguard 20B | `openai/gpt-oss-safeguard-20b` | 8,000 | 30 | 1,000 |
+| Qwen 3.6 27B | `qwen/qwen3.6-27b` | 8,000 | 30 | 1,000 |
+| Qwen 3.8 27B | `qwen/qwen3.8-27b` | 8,000 | 30 | 1,000 |
+| Groq Compound | `groq/compound` | 70,000 | 30 | 250 |
+| Groq Compound Mini | `groq/compound-mini` | 70,000 | 30 | 250 |
+
+Nota: Groq free tier también expone `whisper-large-v3` (audio→texto), `whisper-large-v3-turbo`, `canopylabs/orpheus-*` (TTS) y `meta-llama/llama-prompt-guard-*` (moderación). No son modelos de chat de texto, así que no salen en el menú `/ai model`.
 
 Las preferencias (modelo, prompt, idioma) se guardan por usuario en `data/prefs.json` (persistente vía volumen Docker).
 

@@ -1,7 +1,10 @@
 import 'dotenv/config';
 
 /**
- * Modelos de Groq disponibles en el plan gratuito.
+ * Modelos de chat de Groq disponibles en el plan gratuito.
+ * Fuente: lista oficial de modelos free-tier (sep 2026).
+ * Los modelos de speech/audio (whisper, orpheus) y prompt-guard no son de chat por texto
+ * y no se incluyen en el menú, pero se documentan en el README.
  */
 export interface GroqModel {
   id: string;
@@ -16,68 +19,90 @@ export interface GroqModel {
 }
 
 export const MODELS: Record<string, GroqModel> = {
-  'llama-3.3-70b-versatile': {
-    id: 'llama-3.3-70b-versatile',
-    name: 'Llama 3.3 70B Versatile',
-    description: 'Modelo general de alto rendimiento, bueno para razonamiento y conversación.',
-    tpm: 6000,
+  'openai/gpt-oss-120b': {
+    id: 'openai/gpt-oss-120b',
+    name: 'GPT-OSS 120B',
+    description: 'Modelo open-source de OpenAI (120B). General, alto rendimiento.',
+    tpm: 8000,
     rpm: 30,
     rpd: 1000,
     context: 131072,
     multimodal: false,
     chat: true,
   },
-  'llama-3.1-8b-instant': {
-    id: 'llama-3.1-8b-instant',
-    name: 'Llama 3.1 8B Instant',
-    description: 'Rápido y ligero, ideal para respuestas de baja latencia y alta frecuencia.',
-    tpm: 6000,
+  'openai/gpt-oss-20b': {
+    id: 'openai/gpt-oss-20b',
+    name: 'GPT-OSS 20B',
+    description: 'GPT-OSS 20B. Más rápido y ligero que el 120B.',
+    tpm: 8000,
     rpm: 30,
     rpd: 1000,
     context: 131072,
     multimodal: false,
     chat: true,
   },
-  'qwen-2.5-coder-32b': {
-    id: 'qwen-2.5-coder-32b',
-    name: 'Qwen 2.5 Coder 32B',
-    description: 'Especializado en generación de código y tareas de ingeniería de software.',
-    tpm: 6000,
+  'openai/gpt-oss-safeguard-20b': {
+    id: 'openai/gpt-oss-safeguard-20b',
+    name: 'GPT-OSS Safeguard 20B',
+    description: 'GPT-OSS 20B con guardrails de seguridad (moderación).',
+    tpm: 8000,
     rpm: 30,
     rpd: 1000,
     context: 131072,
     multimodal: false,
     chat: true,
   },
-  'gemma2-9b-it': {
-    id: 'gemma2-9b-it',
-    name: 'Gemma 2 9B IT',
-    description: 'Modelo ligero de Google, eficiente para tareas de texto.',
-    tpm: 6000,
-    rpm: 30,
-    rpd: 1000,
-    context: 8192,
-    multimodal: false,
-    chat: true,
-  },
-  'llama-4-maverick-17b-128e-instruct': {
-    id: 'llama-4-maverick-17b-128e-instruct',
-    name: 'Llama 4 Maverick 17B',
-    description: 'Modelo multimodal de Meta, soporta imágenes y razonamiento.',
-    tpm: 6000,
+  'qwen/qwen3.6-27b': {
+    id: 'qwen/qwen3.6-27b',
+    name: 'Qwen 3.6 27B',
+    description: 'Última generación de Qwen (27B). Buen equilibrio velocidad/calidad.',
+    tpm: 8000,
     rpm: 30,
     rpd: 1000,
     context: 131072,
-    multimodal: true,
+    multimodal: false,
+    chat: true,
+  },
+  'qwen/qwen3.8-27b': {
+    id: 'qwen/qwen3.8-27b',
+    name: 'Qwen 3.8 27B',
+    description: 'Qwen 3.8 27B. Iteración reciente de la serie Qwen.',
+    tpm: 8000,
+    rpm: 30,
+    rpd: 1000,
+    context: 131072,
+    multimodal: false,
+    chat: true,
+  },
+  'groq/compound': {
+    id: 'groq/compound',
+    name: 'Groq Compound',
+    description: 'Modelo compuesto de Groq, razonamiento avanzado multi-paso.',
+    tpm: 70000,
+    rpm: 30,
+    rpd: 250,
+    context: 131072,
+    multimodal: false,
+    chat: true,
+  },
+  'groq/compound-mini': {
+    id: 'groq/compound-mini',
+    name: 'Groq Compound Mini',
+    description: 'Variante ligera del Compound, más rápida.',
+    tpm: 70000,
+    rpm: 30,
+    rpd: 250,
+    context: 131072,
+    multimodal: false,
     chat: true,
   },
 };
 
-/** Lista de ids de modelos de chat, ordenados para el menú */
+/** Son chat models de texto (excluye whisper/orpheus/prompt-guard) */
 export const CHAT_MODEL_IDS = Object.keys(MODELS).filter((id) => MODELS[id].chat);
 
 /** Modelo por defecto */
-export const DEFAULT_MODEL = 'llama-3.3-70b-versatile';
+export const DEFAULT_MODEL = 'openai/gpt-oss-120b';
 
 /** Idiomas soportados por /ai language */
 export type Language = 'es' | 'en';
@@ -102,8 +127,7 @@ export const env = {
 export function formatLimits(m: GroqModel): string {
   return `**${m.name}**\n${m.description}\n` +
     `• Contexto: \`${m.context.toLocaleString()}\` tokens\n` +
-    `• Límites (plan gratuito): \`${m.tpm.toLocaleString()}\` TPM · \`${m.rpm}\` RPM · \`${m.rpd.toLocaleString()}\` RPD\n` +
-    (m.multimodal ? '• 🌄 Multimodal (imágenes)\n' : '');
+    `• Límites (plan gratuito): \`${m.tpm.toLocaleString()}\` TPM · \`${m.rpm}\` RPM · \`${m.rpd.toLocaleString()}\` RPD\n`;
 }
 
 export function languageLabel(lang: Language): string {
