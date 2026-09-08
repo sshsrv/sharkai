@@ -11,7 +11,8 @@ Bot de Discord en TypeScript (discord.js) que usa **Groq** (plan gratuito) para 
 | `/sh prompt [text] [clear]` | Ve o cambia tu system prompt personalizado. `clear:true` vuelve al por defecto. |
 | `/sh language <language>` | Idioma de tus respuestas: `es` (Español) o `en` (English). |
 | `/sh usage` | Muestra los límites de Groq que te quedan ahora mismo (RPM/TPM y resets). |
-| `/sh status` | Muestra tu config actual (modelo, idioma, prompt). |
+| `/sh new` | Empieza una conversación nueva (borra el contexto del chat). |
+| `/sh status` | Muestra tu config actual (modelo, idioma, prompt, contexto). |
 | `/sh reset` | Reinicia todos tus ajustes a los valores por defecto. |
 
 Todas las respuestas usan **Components V2** de Discord (nuevo sistema de mensajes estructurados — sin embeds, sin color).
@@ -31,6 +32,10 @@ Todas las respuestas usan **Components V2** de Discord (nuevo sistema de mensaje
 Nota: Groq free tier también expone `whisper-large-v3` (audio→texto), `whisper-large-v3-turbo`, `canopylabs/orpheus-*` (TTS) y `meta-llama/llama-prompt-guard-*` (moderación). No son modelos de chat de texto, así que no salen en el menú `/ai model`.
 
 Las preferencias (modelo, prompt, idioma) se guardan por usuario en `data/prefs.json` (persistente vía volumen Docker).
+
+## Contexto entre mensajes
+
+El bot guarda una **ventana de contexto** por usuario (las últimas 3 preguntas + respuestas, con cada mensaje recortado a 400 chars para acotar el input). Es persistente entre reinicios. `/sh new` borra la conversación. Así el bot recuerda de qué iba el chat sin quemar una burrada de tokens.
 
 ## Desarrollo
 

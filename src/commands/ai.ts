@@ -20,6 +20,9 @@ import {
   setPrompt,
   getLanguage,
   setLanguage,
+  getHistory,
+  appendHistory,
+  clearHistory,
   resetUser,
 } from '../store.js';
 import { ask, fetchUsage, RateLimits } from '../groq.js';
@@ -163,6 +166,11 @@ export const shCommand = {
     )
     .addSubcommand((s) =>
       s
+        .setName('new')
+        .setDescription('Start a new conversation (clear chat context)')
+    )
+    .addSubcommand((s) =>
+      s
         .setName('reset')
         .setDescription('Reset all your settings (model, prompt, language)')
     )
@@ -189,6 +197,9 @@ export const shCommand = {
         break;
       case 'usage':
         await handleUsage(interaction);
+        break;
+      case 'new':
+        await handleNew(interaction);
         break;
       case 'reset':
         await handleReset(interaction);
@@ -228,6 +239,10 @@ async function handleAsk(interaction: ChatInputCommandInteraction): Promise<void
     const result = await ask(question, overrideModel, interaction.user.id);
     const model = result.model;
     const emoji = MODEL_EMOJI[model];
+
+    // Guardar en la ventana de contexto (se poda a HISTORY_LIMIT automáticamente).
+    appendHistory(interaction.user.id, 'user', question);
+    appendHistory(interaction.user.id, 'assistant', result.text);
 
     // Respuesta truncada para no romper el presupuesto de 4000 chars.
     const answerMax = CHARS_BUDGET - 200;
@@ -395,6 +410,16 @@ async function handleReset(interaction: ChatInputCommandInteraction): Promise<vo
   );
 }
 
+async function handleNew(interaction: ChatInputCommandInteraction): Promise<void> {
+  const lang = getLanguage(interaction.user.id);
+  clearHistory(interaction.user.id);
+  await replyComponents(
+    interaction,
+    [box([boxTitle(t(lang, 'h1New'))])],
+    { ephemeral: true }
+  );
+}
+
 async function handleStatus(interaction: ChatInputCommandInteraction): Promise<void> {
   const lang = getLanguage(interaction.user.id);
   const model = getModel(interaction.user.id);
@@ -408,7 +433,8 @@ async function handleStatus(interaction: ChatInputCommandInteraction): Promise<v
       text(
         `## ${t(lang, 'statusModel')} · ${MODELS[model]?.name ?? model} (\`${model}\`)\n` +
           `## ${t(lang, 'statusLanguage')} · ${languageLabel(language)}\n` +
-          `## ${t(lang, 'statusPrompt')} · ${prompt ? `${prompt.slice(0, 500)}` : t(lang, 'noPrompt')}`
+          `## ${t(lang, 'statusPrompt')} · ${prompt ? `${prompt.slice(0, 500)}` : t(lang, 'noPrompt')}\n` +
+          `## ${t(lang, 'statusContext')} · ${getHistory(interaction.user.id).length} ${t(lang, 'statusContextMsgs')}`
       )
     ]),
   ];

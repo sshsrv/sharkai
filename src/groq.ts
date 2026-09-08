@@ -1,5 +1,5 @@
 import { env, MODELS, DEFAULT_PROMPT_ES, DEFAULT_PROMPT_EN } from './config.js';
-import { getModel, getPrompt, getLanguage } from './store.js';
+import { getModel, getPrompt, getLanguage, getHistory } from './store.js';
 
 const GROQ_ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions';
 
@@ -96,10 +96,18 @@ export async function ask(question: string, overrideModel: string | null, userId
     throw new Error(`Modelo no disponible: ${model}`);
   }
 
-  const messages = [
+  const messages: Array<{ role: string; content: string }> = [
     { role: 'system', content: buildSystemPrompt(userId) },
-    { role: 'user', content: question },
   ];
+
+  // Contexto: ventana del usuario, cada mensaje recortado a 400 chars para acotar tokens.
+  for (const h of getHistory(userId)) {
+    messages.push({
+      role: h.role,
+      content: h.content.length > 400 ? `${h.content.slice(0, 399)}…` : h.content,
+    });
+  }
+  messages.push({ role: 'user', content: question });
 
   const { data, headers } = await chatComplete(model, messages, 2048);
 

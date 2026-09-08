@@ -2,14 +2,24 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { DEFAULT_MODEL, Language } from './config.js';
 
+interface HistoryEntry {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
 interface UserPrefs {
   model: string;
   prompt: string;
   language: Language;
+  /** Ventana de contexto: últimas N interacciones (3 idas y vueltas). */
+  history: HistoryEntry[];
 }
 
 const DATA_DIR = process.env.DATA_DIR ?? './data';
 const DATA_FILE = path.join(DATA_DIR, 'prefs.json');
+
+/** Tamaño máximo de la ventana de historial (mensajes almacenados por usuario). */
+export const HISTORY_LIMIT = 6;
 
 // Mapa userId -> preferencias. En memoria + persistido a disco.
 const prefs = new Map<string, UserPrefs>();
@@ -24,6 +34,7 @@ function load(): void {
           model: v.model ?? DEFAULT_MODEL,
           prompt: v.prompt ?? '',
           language: v.language === 'en' ? 'en' : 'es',
+          history: Array.isArray(v.history) ? v.history.slice(-HISTORY_LIMIT) : [],
         });
       }
     }
@@ -45,7 +56,12 @@ function save(): void {
 load();
 
 function upsert(userId: string): UserPrefs {
-  const cur = prefs.get(userId) ?? { model: DEFAULT_MODEL, prompt: '', language: 'en' as Language };
+  const cur = prefs.get(userId) ?? {
+    model: DEFAULT_MODEL,
+    prompt: '',
+    language: 'en' as Language,
+    history: [],
+  };
   prefs.set(userId, cur);
   return cur;
 }
@@ -74,6 +90,28 @@ export function getLanguage(userId: string): Language {
 
 export function setLanguage(userId: string, language: Language): void {
   upsert(userId).language = language;
+  save();
+}
+
+/** Ventana de contexto actual del usuario. */
+export function getHistory(userId: string): HistoryEntry[] {
+  return prefs.get(userId)?.history ?? [];
+}
+
+/** Añade una entrada al historial, recortando la ventana a HISTORY_LIMIT. */
+export function appendHistory(userId: string, role: HistoryEntry['role'], content: string): void {
+  const p = upsert(userId);
+  p.history.push({ role, content });
+  if (p.history.length > HISTORY_LIMIT) {
+    p.history = p.history.slice(-HISTORY_LIMIT);
+  }
+  save();
+}
+
+/** Borra la conversación del usuario (nueva conversación). */
+export function clearHistory(userId: string): void {
+  const p = upsert(userId);
+  p.history = [];
   save();
 }
 
