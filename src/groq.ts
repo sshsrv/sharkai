@@ -1,6 +1,6 @@
 import Groq from 'groq-sdk';
-import { env, MODELS } from './config.js';
-import { getModel, getPrompt } from './store.js';
+import { env, MODELS, DEFAULT_PROMPT_ES, DEFAULT_PROMPT_EN } from './config.js';
+import { getModel, getPrompt, getLanguage } from './store.js';
 
 const client = new Groq({ apiKey: env.groqApiKey });
 
@@ -14,23 +14,32 @@ export interface AskResult {
   };
 }
 
+/** Construye el system prompt a partir de idioma + prompt custom del usuario. */
+function buildSystemPrompt(userId: string): string {
+  const lang = getLanguage(userId);
+  const custom = getPrompt(userId);
+  const langLine = lang === 'en' ? 'Respond in English.' : 'Responde en español.';
+  const base = custom || (lang === 'en' ? DEFAULT_PROMPT_EN : DEFAULT_PROMPT_ES);
+  return `${langLine}\n\n${base}`;
+}
+
 /**
  * Envía una pregunta a Groq.
  * @param question texto del usuario
  * @param overrideModel modelo opcional one-time; si no viene usa el modelo por defecto del usuario
- * @param userId para recuperar su modelo por defecto y su prompt
+ * @param userId para recuperar su modelo/prompt/idioma
  */
 export async function ask(question: string, overrideModel: string | null, userId: string): Promise<AskResult> {
   const model = overrideModel ?? getModel(userId);
-  const systemPrompt = getPrompt(userId);
 
   if (!MODELS[model]) {
     throw new Error(`Modelo no disponible: ${model}`);
   }
 
-  const messages: Array<{ role: 'system' | 'user'; content: string }> = [];
-  if (systemPrompt) messages.push({ role: 'system', content: systemPrompt });
-  messages.push({ role: 'user', content: question });
+  const messages: Array<{ role: 'system' | 'user'; content: string }> = [
+    { role: 'system', content: buildSystemPrompt(userId) },
+    { role: 'user', content: question },
+  ];
 
   const completion = await client.chat.completions.create({
     model,

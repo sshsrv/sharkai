@@ -2,26 +2,16 @@ import 'dotenv/config';
 
 /**
  * Modelos de Groq disponibles en el plan gratuito.
- * Datos de límites: konsultados de la documentación pública de Groq.
  */
 export interface GroqModel {
-  /** id usado en la API (ruta /openai/v1/chat/completions) */
   id: string;
-  /** Nombre corto para mostrar */
   name: string;
-  /** Descripción / uso recomendado */
   description: string;
-  /** Tokens por minuto (TPM) en plan gratuito */
   tpm: number;
-  /** Peticiones por minuto (RPM) en plan gratuito */
   rpm: number;
-  /** Peticiones por día (RPD) en plan gratuito */
   rpd: number;
-  /** Tamaño del contexto soportado */
   context: number;
-  /** ¿Soporta contexto multimodal (imagen)? */
   multimodal: boolean;
-  /** ¿Es un modelo de chat? (los de speech/no van por chat completions) */
   chat: boolean;
 }
 
@@ -89,9 +79,20 @@ export const CHAT_MODEL_IDS = Object.keys(MODELS).filter((id) => MODELS[id].chat
 /** Modelo por defecto */
 export const DEFAULT_MODEL = 'llama-3.3-70b-versatile';
 
-/** Prompt por defecto usada como system message */
-export const DEFAULT_PROMPT =
-  'Eres SharkAI, un asistente de inteligencia. Responde de forma concisa, precisa y útil.';
+/** Idiomas soportados por /ai language */
+export type Language = 'es' | 'en';
+
+export const LANGUAGE_CHOICES: Array<{ name: string; value: Language }> = [
+  { name: 'Español', value: 'es' },
+  { name: 'English', value: 'en' },
+];
+
+/** Prompt base por defecto */
+export const DEFAULT_PROMPT_ES =
+  'Eres SharkAI, un asistente de inteligencia. Responde de forma concisa, precisa y útil. Sin relleno ni disculpas.';
+
+export const DEFAULT_PROMPT_EN =
+  'You are SharkAI, an intelligence assistant. Answer concisely, precisely and helpfully. No filler, no apologies.';
 
 export const env = {
   discordToken: process.env.DISCORD_TOKEN ?? '',
@@ -103,4 +104,8 @@ export function formatLimits(m: GroqModel): string {
     `• Contexto: \`${m.context.toLocaleString()}\` tokens\n` +
     `• Límites (plan gratuito): \`${m.tpm.toLocaleString()}\` TPM · \`${m.rpm}\` RPM · \`${m.rpd.toLocaleString()}\` RPD\n` +
     (m.multimodal ? '• 🌄 Multimodal (imágenes)\n' : '');
+}
+
+export function languageLabel(lang: Language): string {
+  return lang === 'es' ? 'Español' : 'English';
 }

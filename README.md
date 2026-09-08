@@ -1,15 +1,17 @@
 # SharkAI 🦈
 
-Bot de Discord en TypeScript (discord.js) que usa **Groq** (plan gratuito) para responder preguntas con modelos de IA.
+Bot de Discord en TypeScript (discord.js) que usa **Groq** (plan gratuito) para responder preguntas con modelos de IA. Hereda la metodología del antiguo `sshbot`.
 
-Hereda la metodología del antiguo `sshbot`: un comando para elegir modelo, otro para preguntar, y persistencia por usuario.
-
-## Comandos
+## Comandos — todo bajo `/ai`
 
 | Comando | Descripción |
 |---|---|
-| `/model <modelo> [info]` | Cambia tu modelo por defecto. `info:false` oculta los límites. |
-| `/ask <pregunta> [modelo] [visible]` | Pregunta con tu modelo por defecto. `modelo` es override one-time; `visible:false` hace la respuesta ephemeral (solo tú la ves). |
+| `/ai ask <message> [model] [visible]` | Pregunta a Groq. `model` = override one-time. `visible:false` = respuesta solo para ti (por defecto es visible). |
+| `/ai model [model] [info]` | Ve o cambia tu modelo por defecto. `info:false` oculta los límites. |
+| `/ai prompt [text] [clear]` | Ve o cambia tu system prompt personalizado. `clear:true` vuelve al por defecto. |
+| `/ai language <language>` | Idioma de tus respuestas: `es` (Español) o `en` (English). |
+| `/ai status` | Muestra tu config actual (modelo, idioma, prompt). |
+| `/ai reset` | Reinicia todos tus ajustes a los valores por defecto. |
 
 ## Modelos gratuitos (Groq free tier)
 
@@ -21,6 +23,8 @@ Hereda la metodología del antiguo `sshbot`: un comando para elegir modelo, otro
 | gemma2-9b-it | 6,000 | 30 | 1,000 | 8K |
 | llama-4-maverick-17b-128e-instruct (multimodal 🌄) | 6,000 | 30 | 1,000 | 128K |
 
+Las preferencias (modelo, prompt, idioma) se guardan por usuario en `data/prefs.json` (persistente vía volumen Docker).
+
 ## Desarrollo
 
 ```bash
@@ -30,7 +34,7 @@ npm run dev        # tsx watch
 
 ## Producción (Docker con auto-update desde GitHub)
 
-1. Crea tu bot en https://discord.com/developers/applications (activar *Message Content Intent* no hace falta: no leemos mensajes normales, solo slash commands).
+1. Crea tu bot en https://discord.com/developers/applications.
 2. Consigue una key en https://console.groq.com/keys (plan free).
 3. En el servidor:
 
@@ -56,9 +60,9 @@ Push a `main` = bot actualizado en ≤1 minuto.
 | `GIT_BRANCH` | Rama a seguir (default: `main`) |
 | `POLL_SECONDS` | Intervalo de chequeo de updates (default: `60`) |
 | `DATA_DIR` | Carpeta de persistencia (default: `/app/data`) |
+| `COOLDOWN_SECONDS` | Cooldown entre /ai ask por usuario (default: `3`) |
 
 ## Seguridad
 
 - Los tokens van solo en `.env` (nunca en el repo).
 - El contenedor solo necesita salida HTTPS a `api.groq.com` y `discord.com` + acceso al repo `git` — no expone puertos.
-- El bind-mount de código es un volumen Docker (no del host), y el bot corre con los mínimos permisos del runtime.
