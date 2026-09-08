@@ -66,14 +66,14 @@ export async function deferComponents(
   );
 }
 
-/** Edita el mensaje original (@original) con components. */
+/** Edita el mensaje original (@original) con components. La flag IS_COMPONENTS_V2 es obligatoria también aquí. */
 export async function editComponents(
   interaction: ChatInputCommandInteraction,
   components: V2Component[]
 ): Promise<void> {
   await interaction.client.rest.patch(
     Routes.webhookMessage(interaction.client.user.id, interaction.token),
-    { body: { components } }
+    { body: { flags: IS_COMPONENTS_V2, components } }
   );
 }
 

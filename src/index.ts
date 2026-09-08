@@ -41,3 +41,11 @@ client.login(env.discordToken).catch((err: unknown) => {
   console.error('❌ Error al iniciar sesión:', err instanceof Error ? err.message : err);
   process.exit(1);
 });
+
+// Nunca dejar el proceso muerto por una promesa no manejada (ej. error de REST en una interacción).
+process.on('unhandledRejection', (reason) => {
+  console.error('⚠️ unhandledRejection:', reason instanceof Error ? reason.message : reason);
+});
+process.on('uncaughtException', (err) => {
+  console.error('⚠️ uncaughtException:', err.message);
+});

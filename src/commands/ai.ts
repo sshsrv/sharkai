@@ -175,11 +175,12 @@ function fmtK(n: number | null | undefined): string {
   return String(n);
 }
 
-/** Segundos restantes hasta reset de un límite dado en epoch ms. */
-function secsToReset(epochMs: number | null): string {
-  if (epochMs === null || epochMs === undefined) return '?';
-  const s = Math.ceil((epochMs - Date.now()) / 1000);
-  return s > 0 ? `${s}s` : 'ahora';
+/** Segundos restantes hasta reset de un límite dado en epoch seconds. */
+function secsToReset(epochSec: number | null): string {
+  if (epochSec === null || epochSec === undefined) return '?';
+  const s = Math.ceil(epochSec * 1000 - Date.now()) / 1000;
+  const ms = epochSec * 1000 - Date.now();
+  return ms > 0 ? `${Math.ceil(ms / 1000)}s` : 'ahora';
 }
 
 /** Footer estilo heist.lol: emoji de modelo, límites reales, disclaimer. */
@@ -227,10 +228,23 @@ async function handleAsk(interaction: ChatInputCommandInteraction): Promise<void
       text(footer(emoji, model, result.rateLimits)),
     ];
 
-    await editComponents(interaction, components);
+    // El footer con límites puede fallar si el edit se rechaza: nunca tirar el bot.
+    try {
+      await editComponents(interaction, components);
+    } catch (e) {
+      try {
+        await editComponents(interaction, [text(answerText)]);
+      } catch {
+        console.error('editComponents falló', e);
+      }
+    }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    await editComponents(interaction, [text(`❌ Error al consultar Groq: ${message}`)]);
+    try {
+      await editComponents(interaction, [text(`Error al consultar Groq: ${message}`)]);
+    } catch {
+      console.error('editComponents de error falló', message);
+    }
   }
 }
 
