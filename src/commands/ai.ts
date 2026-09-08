@@ -12,6 +12,7 @@ import {
 	languageLabel,
 	formatLimits,
 	PROVIDER_LABEL,
+	type AIModel,
 } from '../config.js';
 import {
 	getModel,
@@ -25,7 +26,7 @@ import {
 	clearHistory,
 	resetUser,
 } from '../store.js';
-import { ask, fetchGroqUsage } from '../providers.js';
+import { ask, fetchGroqUsage, refreshGroqLimits, getObservedLimits } from '../providers.js';
 import { recordRequest, getUsage, DAILY_LIMIT } from '../usage.js';
 import { t } from '../ui.js';
 import {
@@ -263,6 +264,28 @@ async function handleAsk(interaction: ChatInputCommandInteraction): Promise<void
 	}
 }
 
+/**
+ * Info de un modelo: catálogo (config) + límites EN VIVO por modelo sacados de la API.
+ * - Groq: ping mínimo (1 token) a ese modelo, los headers x-ratelimit-* traen sus límites reales.
+ * - Google: su API no expone límites en resoluciones normales; los capturamos de los 429
+ *   (rate_limit_metadata) cuando pasan, o usamos la cuota publicada del free tier.
+ */
+async function modelInfoText(m: AIModel): Promise<string> {
+	let info = formatLimits(m);
+	if (m.provider === 'groq') {
+		const live = await refreshGroqLimits(m.id);
+		if (live?.limitRequests) {
+			info +=
+				`\nLive now: \`${live.remainingRequests ?? '?'}/${live.limitRequests}\` RPM · ` +
+				`\`${fmtK(live.remainingTokens)}/${fmtK(live.limitTokens)}\` TPM` +
+				(live.resetRequests ? ` · reset ${live.resetRequests}` : '');
+		}
+	} else {
+		info += '\nLimits from Google free-tier (published quota; captured live from API on 429).';
+	}
+	return info;
+}
+
 async function handleModel(interaction: ChatInputCommandInteraction): Promise<void> {
 	const lang = getLanguage(interaction.user.id);
 	const override = interaction.options.getString('model');
@@ -281,7 +304,7 @@ async function handleModel(interaction: ChatInputCommandInteraction): Promise<vo
 		const components: V2Component[] = [
 			box([
 				boxTitle(t(lang, 'h1ModelUpdated', `${m.name} (\`${override}\`)`)),
-				...(showInfo ? [separator(), text(formatLimits(m))] : []),
+				...(showInfo ? [separator(), text(await modelInfoText(m))] : []),
 			]),
 		];
 		await replyComponents(interaction, components, { ephemeral: true });
@@ -294,7 +317,7 @@ async function handleModel(interaction: ChatInputCommandInteraction): Promise<vo
 	const components: V2Component[] = [
 		box([
 			boxTitle(t(lang, 'h1ModelCurrent', `${m.name} (\`${current}\`)`)),
-			...(showInfo ? [separator(), text(formatLimits(m))] : []),
+			...(showInfo ? [separator(), text(await modelInfoText(m))] : []),
 		]),
 	];
 	await replyComponents(interaction, components, { ephemeral: true });
@@ -371,26 +394,42 @@ async function handleUsage(interaction: ChatInputCommandInteraction): Promise<vo
 		const resetRequests = rl.resetRequests ? `\`${rl.resetRequests}\`` : '?';
 		const resetTokens = rl.resetTokens ? `\`${rl.resetTokens}\`` : '?';
 
-		const components: V2Component[] = [
-			box([
-				boxTitle(t(lang, 'usageTitle')),
-				separator(),
-				text(
-					`## ${t(lang, 'usageShared')}\n` +
-						`\`${usage.requests}/${DAILY_LIMIT}\` daily · ` +
-						`Groq: \`${usage.byProvider.groq}\` · Google: \`${usage.byProvider.google}\``,
-				),
-				separator(),
-				text(
-					`## ${t(lang, 'usageLive')} · ${MODELS[groqModel]?.name ?? groqModel} (${PROVIDER_LABEL[MODELS[groqModel]?.provider ?? 'groq']})\n` +
-						`\`${rl.remainingRequests ?? '?'}/${rl.limitRequests ?? '?'}\` ${t(lang, 'usageRequestsTag')} · ` +
-						`${t(lang, 'usageReset')} ${resetRequests}\n` +
-						`\`${fmtK(rl.remainingTokens)}/${fmtK(rl.limitTokens)}\` ${t(lang, 'usageTokensTag')} · ` +
-						`${t(lang, 'usageReset')} ${resetTokens}`,
-				),
-			]),
+		const inner: V2Component[] = [
+			boxTitle(t(lang, 'usageTitle')),
+			separator(),
+			text(
+				`## ${t(lang, 'usageShared')}\n` +
+					`\`${usage.requests}/${DAILY_LIMIT}\` daily · ` +
+					`Groq: \`${usage.byProvider.groq}\` · Google: \`${usage.byProvider.google}\``,
+			),
+			separator(),
+			text(
+				`## ${t(lang, 'usageLive')} · ${MODELS[groqModel]?.name ?? groqModel} (${PROVIDER_LABEL[MODELS[groqModel]?.provider ?? 'groq']})\n` +
+					`\`${rl.remainingRequests ?? '?'}/${rl.limitRequests ?? '?'}\` ${t(lang, 'usageRequestsTag')} · ` +
+					`${t(lang, 'usageReset')} ${resetRequests}\n` +
+					`\`${fmtK(rl.remainingTokens)}/${fmtK(rl.limitTokens)}\` ${t(lang, 'usageTokensTag')} · ` +
+					`${t(lang, 'usageReset')} ${resetTokens}`,
+			),
 		];
-		await editComponents(interaction, components);
+
+		// Google no expone límites en headers: usamos lo capturado en 429 (rate_limit_metadata).
+		if (MODELS[model]?.provider === 'google') {
+			const goog = getObservedLimits(model);
+			if (goog?.limitRequests || goog?.limitTokens) {
+				inner.push(
+					separator(),
+					text(
+						`## ${t(lang, 'usageLive')} · ${MODELS[model]?.name ?? model} (${PROVIDER_LABEL[MODELS[model]?.provider ?? 'google']})\n` +
+							(goog.limitRequests !== null
+								? `\`${goog.remainingRequests ?? '?'}/${goog.limitRequests}\` ${t(lang, 'usageRequestsTag')}\n`
+								: '') +
+							`\`${fmtK(goog.remainingTokens)}/${fmtK(goog.limitTokens)}\` ${t(lang, 'usageTokensTag')}`,
+					),
+				);
+			}
+		}
+
+		await editComponents(interaction, [box(inner)]);
 	} catch (err) {
 		const message = err instanceof Error ? err.message : String(err);
 		await editComponents(interaction, [text(t(lang, 'usageError', message))]);

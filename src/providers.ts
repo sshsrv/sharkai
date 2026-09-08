@@ -1,3 +1,5 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import { env, MODELS, DEFAULT_PROMPT_EN, DEFAULT_PROMPT_ES, type Provider } from './config.js';
 import { getModel, getPrompt, getLanguage, getHistory } from './store.js';
 
@@ -29,6 +31,58 @@ export interface AskResult {
 interface ChatMessage {
 	role: string;
 	content: string;
+}
+
+/**
+ * Límites OBSERVADOS por modelo, capturados de la propia API:
+ * - Groq: de los headers x-ratelimit-* de cada respuesta.
+ * - Google: de rate_limit_metadata en errores 429 (única vía pública).
+ * Se persisten en data/limits.json para que sobrevivan a reinicios.
+ */
+const DATA_DIR = process.env.DATA_DIR ?? './data';
+const LIMITS_FILE = path.join(DATA_DIR, 'limits.json');
+
+const OBSERVED_TTL_MS = 60_000;
+
+const observedLimits = new Map<string, { rateLimits: RateLimits; at: number }>();
+
+function saveObserved(): void {
+	try {
+		fs.mkdirSync(DATA_DIR, { recursive: true });
+		fs.writeFileSync(LIMITS_FILE, JSON.stringify(Object.fromEntries(observedLimits.entries())));
+	} catch {
+		// El fallo de persistencia no debe tirar el bot.
+	}
+}
+
+function loadObserved(): void {
+	try {
+		if (!fs.existsSync(LIMITS_FILE)) return;
+		const raw = JSON.parse(fs.readFileSync(LIMITS_FILE, 'utf-8')) as Record<
+			string,
+			{ rateLimits?: RateLimits; at?: number }
+		>;
+		for (const [model, v] of Object.entries(raw)) {
+			if (v?.rateLimits) {
+				observedLimits.set(model, { rateLimits: v.rateLimits, at: typeof v.at === 'number' ? v.at : 0 });
+			}
+		}
+	} catch {
+		// JSON corrupto -> vacío.
+	}
+}
+
+loadObserved();
+
+function recordObserved(model: string, rateLimits: RateLimits): void {
+	if (!rateLimits) return;
+	observedLimits.set(model, { rateLimits, at: Date.now() });
+	saveObserved();
+}
+
+/** Límites que ya conocemos de un modelo (capturados de la API). */
+export function getObservedLimits(model: string): RateLimits | null {
+	return observedLimits.get(model)?.rateLimits ?? null;
 }
 
 function readRateLimits(headers: Headers): RateLimits {
@@ -75,6 +129,10 @@ async function groqComplete(
 	if (!res.ok || data.error) {
 		throw new Error(data.error?.message ?? `HTTP ${res.status}`);
 	}
+
+	// Cada respuesta trae los límites reales de ESE modelo -> los cacheamos.
+	recordObserved(model, readRateLimits(res.headers));
+
 	return { data, headers: res.headers };
 }
 
@@ -89,7 +147,34 @@ interface GoogleResponse {
 		candidatesTokenCount?: number;
 		totalTokenCount?: number;
 	};
-	error?: { message?: string };
+	error?: {
+		message?: string;
+		/** Solo aparece cuando se excede una cuota (HTTP 429). */
+		rate_limit_metadata?: Array<{ name?: string; limit?: number; remaining?: number }>;
+	};
+}
+
+/** Convierte rate_limit_metadata de Google (429) a nuestro RateLimits. */
+function googleMetadataToLimits(meta: NonNullable<Pick<NonNullable<GoogleResponse['error']>, 'rate_limit_metadata'>['rate_limit_metadata']>): RateLimits {
+	const limits: RateLimits = {
+		remainingRequests: null,
+		limitRequests: null,
+		resetRequests: null,
+		remainingTokens: null,
+		limitTokens: null,
+		resetTokens: null,
+	};
+	for (const m of meta ?? []) {
+		if (!m || typeof m.name !== 'string') continue;
+		if (m.name === 'requests-per-day' || m.name === 'requests-per-minute') {
+			limits.remainingRequests = m.remaining ?? null;
+			limits.limitRequests = m.limit ?? null;
+		} else if (m.name === 'tokens-per-minute') {
+			limits.remainingTokens = m.remaining ?? null;
+			limits.limitTokens = m.limit ?? null;
+		}
+	}
+	return limits;
 }
 
 async function googleComplete(
@@ -121,6 +206,10 @@ async function googleComplete(
 	const data = (await res.json()) as GoogleResponse;
 
 	if (!res.ok || data.error) {
+		// En un 429 Google incluye la cuota REAL por modelo. La capturamos.
+		if (res.status === 429 && data.error?.rate_limit_metadata) {
+			recordObserved(model, googleMetadataToLimits(data.error.rate_limit_metadata));
+		}
 		throw new Error(data.error?.message ?? `HTTP ${res.status}`);
 	}
 
@@ -210,7 +299,7 @@ export async function ask(question: string, overrideModel: string | null, userId
 }
 
 /**
- * Consulta los límites en vivo de un modelo de Groq con una llamada mínima (1 token).
+ * Consulta los límites EN VIVO de un modelo de Groq con una llamada mínima (1 token).
  * Groq no tiene endpoint de uso; los headers de rate limit vienen en cada respuesta.
  */
 export async function fetchGroqUsage(model: string): Promise<RateLimits> {
@@ -219,4 +308,19 @@ export async function fetchGroqUsage(model: string): Promise<RateLimits> {
 	}
 	const { headers } = await groqComplete(model, [{ role: 'user', content: 'ping' }], 1);
 	return readRateLimits(headers);
+}
+
+/**
+ * Límites "frescos" de un modelo de Groq: usa lo observado (API) si tiene <60s,
+ * si no hace un ping mínimo de 1 token para refrescarlos. Devuelve null si falla.
+ */
+export async function refreshGroqLimits(model: string): Promise<RateLimits | null> {
+	if (!MODELS[model] || MODELS[model].provider !== 'groq') return null;
+	const cached = observedLimits.get(model);
+	if (cached && Date.now() - cached.at < OBSERVED_TTL_MS) return cached.rateLimits;
+	try {
+		return await fetchGroqUsage(model);
+	} catch {
+		return cached?.rateLimits ?? null;
+	}
 }

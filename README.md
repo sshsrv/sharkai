@@ -36,7 +36,11 @@ Las preferencias (modelo, prompt, idioma) se guardan por usuario en `data/prefs.
 
 ## Uso compartido
 
-Todos los modelos tiran de la **misma cuota** (la misma cuenta/API), así que hay un único contador de uso diario: se muestra en el footer de `/sh ask` (`X/1000 daily`) y en `/sh usage`. Límite configurable con `SHARED_DAILY_LIMIT` (default `1000`). Además, `/sh usage` muestra los límites en vivo de Groq (RPM/TPM y resets) obtenidos de los headers de cada respuesta.
+Todos los modelos tiran de la **misma cuota** (la misma cuenta/API), así que hay un único contador de uso diario: se muestra en el footer de `/sh ask` (`X/1000 daily`) y en `/sh usage`. Límite configurable con `SHARED_DAILY_LIMIT` (default `1000`).
+
+Los **límites son específicos por modelo y se sacan de la propia API**:
+- **Groq**: cada respuesta trae en sus headers `x-ratelimit-*` los límites reales de ese modelo con tu key. Se cachean en `data/limits.json` (persisten entre reinicios) y `/sh model` + `/sh usage` los refrescan con un ping mínimo de 1 token cuando llevan más de 60s.
+- **Google**: su API no expone límites en resoluciones normales; se capturan los reales del `rate_limit_metadata` de los errores 429 (cuota superada) y se cachean igual, usando como base la cuota publicada del free tier.
 
 ## Contexto entre mensajes
 
