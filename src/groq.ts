@@ -7,10 +7,11 @@ const GROQ_ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions';
 export interface RateLimits {
   remainingRequests: number | null;
   limitRequests: number | null;
-  resetRequests: number | null;
+  /** Duración hasta reset (string humano: "1m26.4s", "547ms") */
+  resetRequests: string | null;
   remainingTokens: number | null;
   limitTokens: number | null;
-  resetTokens: number | null;
+  resetTokens: string | null;
 }
 
 export interface AskResult {
@@ -29,13 +30,17 @@ function readRateLimits(headers: Headers): RateLimits {
     const v = headers.get(k);
     return v !== null && v !== undefined && v !== '' ? Number(v) : null;
   };
+  const str = (k: string): string | null => {
+    const v = headers.get(k);
+    return v !== null && v !== undefined && v !== '' ? v : null;
+  };
   return {
     remainingRequests: num('x-ratelimit-remaining-requests'),
     limitRequests: num('x-ratelimit-limit-requests'),
-    resetRequests: num('x-ratelimit-reset-requests'),
+    resetRequests: str('x-ratelimit-reset-requests'),
     remainingTokens: num('x-ratelimit-remaining-tokens'),
     limitTokens: num('x-ratelimit-limit-tokens'),
-    resetTokens: num('x-ratelimit-reset-tokens'),
+    resetTokens: str('x-ratelimit-reset-tokens'),
   };
 }
 
@@ -63,13 +68,19 @@ async function chatComplete(model: string, messages: Array<{ role: string; conte
   return { data, headers: res.headers };
 }
 
-/** Construye el system prompt a partir de idioma + prompt custom del usuario. */
+/**
+ * Construye el system prompt a partir del idioma configurado + prompt custom.
+ * IMPORTANTE: la IA SIEMPRE responde en el idioma configurado, nunca en el de la pregunta.
+ */
 function buildSystemPrompt(userId: string): string {
   const lang = getLanguage(userId);
   const custom = getPrompt(userId);
-  const langLine = lang === 'en' ? 'Respond in English.' : 'Responde en español.';
+  const langRule =
+    lang === 'en'
+      ? 'You MUST respond in English, no matter what language the user writes in. Never follow the language of the question.'
+      : 'SIEMPRE debes responder en español, sin importar en qué idioma escriba el usuario. Nunca respondas en el idioma de la pregunta.';
   const base = custom || (lang === 'en' ? DEFAULT_PROMPT_EN : DEFAULT_PROMPT_ES);
-  return `${langLine}\n\n${base}`;
+  return `${langRule}\n\n${base}`;
 }
 
 /**
@@ -93,7 +104,7 @@ export async function ask(question: string, overrideModel: string | null, userId
   const { data, headers } = await chatComplete(model, messages, 2048);
 
   return {
-    text: data.choices?.[0]?.message?.content?.trim() ?? '*(sin respuesta)*',
+    text: data.choices?.[0]?.message?.content?.trim() ?? '*(no response)*',
     model,
     usage: {
       promptTokens: data.usage?.prompt_tokens ?? 0,

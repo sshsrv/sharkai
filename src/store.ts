@@ -45,7 +45,7 @@ function save(): void {
 load();
 
 function upsert(userId: string): UserPrefs {
-  const cur = prefs.get(userId) ?? { model: DEFAULT_MODEL, prompt: '', language: 'es' as Language };
+  const cur = prefs.get(userId) ?? { model: DEFAULT_MODEL, prompt: '', language: 'en' as Language };
   prefs.set(userId, cur);
   return cur;
 }
@@ -69,7 +69,7 @@ export function setPrompt(userId: string, prompt: string): void {
 }
 
 export function getLanguage(userId: string): Language {
-  return prefs.get(userId)?.language ?? 'es';
+  return prefs.get(userId)?.language ?? 'en';
 }
 
 export function setLanguage(userId: string, language: Language): void {
