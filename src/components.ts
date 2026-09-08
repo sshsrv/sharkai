@@ -29,6 +29,10 @@ export const separator = (divider = true, spacing: 1 | 2 = 1): V2Component => ({
   spacing,
 });
 
+/** Heading con tamaño de título (# = 1, ## = 2, ### = 3…). Compatible con Components V2. */
+export const heading = (content: string, level = 1): V2Component =>
+  ({ type: 10, content: `${'#'.repeat(Math.min(Math.max(level, 1), 6))} ${content}` }) as V2Component;
+
 function flags(opts: { ephemeral?: boolean } = {}): number {
   return IS_COMPONENTS_V2 | (opts.ephemeral ? EPHEMERAL : 0);
 }

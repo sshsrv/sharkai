@@ -31,6 +31,7 @@ import {
   editComponents,
   text,
   separator,
+  heading,
 } from '../components.js';
 
 const MODEL_CHOICES = CHAT_MODEL_IDS.map((id) => ({ name: MODELS[id].name, value: id }));
@@ -52,16 +53,16 @@ const lastAsk = new Map<string, number>();
 const CHARS_BUDGET = 4000;
 
 /** Fondo neutro (gris oscuro de Discord) para los contenedores. Sin colores llamativos. */
-const BOX_BG = 0x2b2d31;
+const BOX_BG = 0xff5faf;
 
 /** Caja con "fondo": container(17) con un accent_color neutro. */
 function box(inner: V2Component[]): V2Component {
   return { type: 17, components: inner, accent_color: BOX_BG };
 }
 
-/** Título en negrita dentro de una caja. */
+/** Título como heading (nivel 1) dentro de una caja. */
 function boxTitle(title: string): V2Component {
-  return text(`**${title}**`);
+  return heading(title, 1);
 }
 
 /** Línea pequeña/tenue para hints. */
@@ -363,11 +364,11 @@ async function handleUsage(interaction: ChatInputCommandInteraction): Promise<vo
         boxTitle(t(lang, 'usageTitle', `${MODELS[model]?.name ?? model} (\`${model}\`)`)),
         separator(),
         text(
-          `**${t(lang, 'usageRequests')}**\n\`${rl.remainingRequests ?? '?'}/${rl.limitRequests ?? '?'}\` · ${t(lang, 'usageReset')} ${resetRequests}`
+          `## ${t(lang, 'usageRequests')}\n\`${rl.remainingRequests ?? '?'}/${rl.limitRequests ?? '?'}\` · ${t(lang, 'usageReset')} ${resetRequests}`
         ),
         separator(),
         text(
-          `**${t(lang, 'usageTokens')}**\n\`${fmtK(rl.remainingTokens)}/${fmtK(rl.limitTokens)}\` TPM · ${t(lang, 'usageReset')} ${resetTokens}`
+          `## ${t(lang, 'usageTokens')}\n\`${fmtK(rl.remainingTokens)}/${fmtK(rl.limitTokens)}\` TPM · ${t(lang, 'usageReset')} ${resetTokens}`
         ),
       ]),
     ];
@@ -405,12 +406,10 @@ async function handleStatus(interaction: ChatInputCommandInteraction): Promise<v
       boxTitle(t(lang, 'statusTitle')),
       separator(),
       text(
-        `**${t(lang, 'statusModel')}** · ${MODELS[model]?.name ?? model} (\`${model}\`)\n` +
-          `**${t(lang, 'statusLanguage')}** · ${languageLabel(language)}\n` +
-          `**${t(lang, 'statusPrompt')}** · ${prompt ? `\`${prompt.slice(0, 500)}\`` : t(lang, 'noPrompt')}`
-      ),
+        `## ${t(lang, 'statusModel')} · ${MODELS[model]?.name ?? model} (\`${model}\`)\n` +
+          `## ${t(lang, 'statusLanguage')} · ${languageLabel(language)}\n` +
+          `## ${t(lang, 'statusPrompt')} · ${prompt ? `${prompt.slice(0, 500)}` : t(lang, 'noPrompt')}`
+      )
     ]),
   ];
-
-  await replyComponents(interaction, components, { ephemeral: true });
 }
