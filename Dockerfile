@@ -25,8 +25,9 @@ COPY package.json package-lock.json* ./
 RUN npm ci --omit=dev || npm install --omit=dev
 
 COPY --from=build /app/dist ./dist
-COPY docker-entrypoint.sh ./docker-entrypoint.sh
+# entrypoint fuera del volumen /app para sobrevivir al montaje de sharkai-code
+COPY docker-entrypoint.sh /opt/docker-entrypoint.sh
 
-RUN chmod +x ./docker-entrypoint.sh
+RUN chmod +x /opt/docker-entrypoint.sh
 
-CMD ["./docker-entrypoint.sh"]
+CMD ["/opt/docker-entrypoint.sh"]

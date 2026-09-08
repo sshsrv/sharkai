@@ -6,28 +6,30 @@ GIT_BRANCH="${GIT_BRANCH:-main}"
 POLL_SECONDS="${POLL_SECONDS:-60}"
 DATA_DIR="${DATA_DIR:-/app/data}"
 
-echo "[sharkai] Entorno: data=$DATA_DIR poll=${POLL_SECONDS}s branch=$GIT_BRANCH"
+echo "[sharkai] data=$DATA_DIR poll=${POLL_SECONDS}s branch=$GIT_BRANCH"
 
-# Asegurar que /app contiene el repo clonado
+# El repo vive en el volumen sharkai-code (montado en /app).
+# Si no hay .git: el volumen está vacío → clonar el repo sobre /app.
 if [ ! -d /app/.git ]; then
-  echo "[sharkai] Clonando $GIT_REPO..."
-  rm -rf /app.tmp
-  git clone --depth 1 -b "$GIT_BRANCH" "$GIT_REPO" /app.tmp
+  echo "[sharkai] /app vacío — clonando $GIT_REPO..."
+  rm -rf /tmp/sharkai-clone
+  git clone --depth 1 -b "$GIT_BRANCH" "$GIT_REPO" /tmp/sharkai-clone
   rm -rf /app/* /app/.[!.]* 2>/dev/null || true
-  cp -a /app.tmp/. /app/
-  rm -rf /app.tmp
+  cp -a /tmp/sharkai-clone/. /app/
+  rm -rf /tmp/sharkai-clone
 fi
 
 cd /app
 
-# Función de build + arranque
 last_head=""
+BOT_PID=""
+
 start_bot() {
-  echo "[sharkai] npm ci + build..."
-  npm ci --omit=dev >/dev/null 2>&1 || npm install --omit=dev >/dev/null 2>&1 || true
+  echo "[sharkai] npm install + build..."
+  npm install --omit=dev >/dev/null 2>&1 || true
   npm run build || true
   echo "[sharkai] Arrancando node dist/index.js"
-  node dist/index.js > /proc/1/fd/1 2>&1 &
+  node dist/index.js &
   BOT_PID=$!
   last_head=$(git rev-parse HEAD)
   echo "[sharkai] Bot PID=$BOT_PID (commit $last_head)"
@@ -44,7 +46,7 @@ stop_bot() {
 start_bot
 trap stop_bot INT TERM
 
-# Watcher de auto-update
+# Watcher de auto-update: pull cada POLL_SECONDS y reinicio si hay cambios
 while true; do
   sleep "$POLL_SECONDS"
   cd /app
