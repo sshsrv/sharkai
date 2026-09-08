@@ -1,6 +1,10 @@
 services:
   sharkai:
-    build: .
+    build:
+      context: .
+      args:
+        GIT_REPO: ${GIT_REPO:-https://github.com/sshsrv/sharkai.git}
+        GIT_BRANCH: ${GIT_BRANCH:-main}
     container_name: sharkai
     restart: unless-stopped
     environment:

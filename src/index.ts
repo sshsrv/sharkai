@@ -12,14 +12,19 @@ if (!env.groqApiKey) {
 }
 
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages],
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.DirectMessages],
 });
 
 client.once(Events.ClientReady, async (c) => {
   console.log(`✅ SharkAI logueado como ${c.user.tag}`);
   try {
     await c.application?.commands.set([aiCommand.data.toJSON()]);
-    console.log('✅ Comando /ai registrado');
+    console.log('✅ Comando /ai registrado (user-install)');
+    // Link de instalación para el usuario (sin necesidad de servidor)
+    const appId = c.user.id;
+    console.log(
+      `🔗 Instala la app: https://discord.com/oauth2/authorize?client_id=${appId}&integration_type=1&scope=applications.commands`
+    );
   } catch (err) {
     console.error('⚠️ No se pudieron registrar comandos:', err instanceof Error ? err.message : err);
   }

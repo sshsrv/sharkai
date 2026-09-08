@@ -2,6 +2,8 @@ import {
   ChatInputCommandInteraction,
   SlashCommandBuilder,
   EmbedBuilder,
+  InteractionContextType,
+  ApplicationIntegrationType,
 } from 'discord.js';
 import {
   MODELS,
@@ -33,6 +35,9 @@ export const aiCommand = {
   data: new SlashCommandBuilder()
     .setName('ai')
     .setDescription('SharkAI: pregunta a Groq o configura tu bot')
+    // App instalable por USUARIO (0=server install, 1=user install)
+    .setIntegrationTypes([ApplicationIntegrationType.UserInstall])
+    .setContexts([InteractionContextType.BotDM, InteractionContextType.PrivateChannel])
     .addSubcommand((s) =>
       s
         .setName('ask')
