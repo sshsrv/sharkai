@@ -2,16 +2,19 @@
 
 Bot de Discord en TypeScript (discord.js) que usa **Groq** (plan gratuito) para responder preguntas con modelos de IA. Hereda la metodología del antiguo `sshbot`.
 
-## Comandos — todo bajo `/ai`
+## Comandos — todo bajo `/sh`
 
 | Comando | Descripción |
 |---|---|
-| `/ai ask <message> [model] [visible]` | Pregunta a Groq. `model` = override one-time. `visible:false` = respuesta solo para ti (por defecto es visible). |
-| `/ai model [model] [info]` | Ve o cambia tu modelo por defecto. `info:false` oculta los límites. |
-| `/ai prompt [text] [clear]` | Ve o cambia tu system prompt personalizado. `clear:true` vuelve al por defecto. |
-| `/ai language <language>` | Idioma de tus respuestas: `es` (Español) o `en` (English). |
-| `/ai status` | Muestra tu config actual (modelo, idioma, prompt). |
-| `/ai reset` | Reinicia todos tus ajustes a los valores por defecto. |
+| `/sh ask <message> [model] [visible]` | Pregunta a Groq. `model` = override one-time. `visible:false` = respuesta solo para ti (por defecto es visible). Footer estilo heist.lol con modelo + límites reales. |
+| `/sh model [model] [info]` | Ve o cambia tu modelo por defecto. `info:false` oculta los límites. |
+| `/sh prompt [text] [clear]` | Ve o cambia tu system prompt personalizado. `clear:true` vuelve al por defecto. |
+| `/sh language <language>` | Idioma de tus respuestas: `es` (Español) o `en` (English). |
+| `/sh usage` | Muestra los límites de Groq que te quedan ahora mismo (RPM/TPM y resets). |
+| `/sh status` | Muestra tu config actual (modelo, idioma, prompt). |
+| `/sh reset` | Reinicia todos tus ajustes a los valores por defecto. |
+
+Todas las respuestas usan **Components V2** de Discord (nuevo sistema de mensajes estructurados — sin embeds, sin color).
 
 ## Modelos gratuitos (Groq free tier — chat, sep 2026)
 

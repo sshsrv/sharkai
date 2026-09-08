@@ -1,6 +1,6 @@
 import { Client, GatewayIntentBits, Events } from 'discord.js';
 import { env } from './config.js';
-import { aiCommand } from './commands/ai.js';
+import { shCommand } from './commands/ai.js';
 
 if (!env.discordToken) {
   console.error('❌ Falta DISCORD_TOKEN en el entorno');
@@ -18,8 +18,8 @@ const client = new Client({
 client.once(Events.ClientReady, async (c) => {
   console.log(`✅ SharkAI logueado como ${c.user.tag}`);
   try {
-    await c.application?.commands.set([aiCommand.data.toJSON()]);
-    console.log('✅ Comando /ai registrado (user-install)');
+    await c.application?.commands.set([shCommand.data.toJSON()]);
+    console.log('✅ Comando /sh registrado (user-install)');
     // Link de instalación para el usuario (sin necesidad de servidor)
     const appId = c.user.id;
     console.log(
@@ -32,8 +32,8 @@ client.once(Events.ClientReady, async (c) => {
 
 client.on(Events.InteractionCreate, async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
-  if (interaction.commandName === 'ai') {
-    await aiCommand.execute(interaction);
+  if (interaction.commandName === 'sh') {
+    await shCommand.execute(interaction);
   }
 });
 
