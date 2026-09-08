@@ -57,7 +57,7 @@ const MODEL_EMOJI: Record<string, string> = {
 	// Google
 	'gemini-2.5-flash': '<:google:1547015367174397952>',
 	'gemini-2.5-flash-lite': '<:google:1547015367174397952>',
-	'gemini-3-flash': '<:google:1547015367174397952>',
+	'gemini-3-flash-preview': '<:google:1547015367174397952>',
 	'gemini-3.1-flash-lite': '<:google:1547015367174397952>',
 	'gemini-3.5-flash': '<:google:1547015367174397952>',
 	'gemini-3.5-flash-lite': '<:google:1547015367174397952>',

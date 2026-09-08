@@ -30,7 +30,7 @@ Todas las respuestas usan **Components V2** de Discord (nuevo sistema de mensaje
 |Groq Compound Mini|`groq/compound-mini`|Groq|70,000|250|250|
 |Gemini 2.5 Flash|`gemini-2.5-flash`|Google|250,000|5|20|
 |Gemini 2.5 Flash-Lite|`gemini-2.5-flash-lite`|Google|250,000|10|20|
-|Gemini 3 Flash|`gemini-3-flash`|Google|250,000|5|20|
+|Gemini 3 Flash|`gemini-3-flash-preview`|Google|250,000|5|20|
 |Gemini 3.1 Flash-Lite|`gemini-3.1-flash-lite`|Google|250,000|15|500|
 |Gemini 3.5 Flash|`gemini-3.5-flash`|Google|250,000|5|20|
 |Gemini 3.5 Flash-Lite|`gemini-3.5-flash-lite`|Google|250,000|15|500|

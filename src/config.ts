@@ -129,8 +129,8 @@ export const MODELS: Record<string, AIModel> = {
 		context: 1048576,
 		multimodal: true,
 	},
-	'gemini-3-flash': {
-		id: 'gemini-3-flash',
+	'gemini-3-flash-preview': {
+		id: 'gemini-3-flash-preview',
 		name: 'Gemini 3 Flash',
 		provider: 'google',
 		description: 'Google Gemini 3 Flash. Latest compact model, great speed/quality balance.',
