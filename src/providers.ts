@@ -6,11 +6,11 @@ import { getModel, getPrompt, getLanguage, getHistory } from './store.js';
 const GROQ_ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions';
 const GOOGLE_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models';
 
-/** Rate limits reales que devuelve Groq en los headers de cada respuesta. */
+
 export interface RateLimits {
 	remainingRequests: number | null;
 	limitRequests: number | null;
-	/** Duración hasta reset (string humano: "1m[X]s", "[X]ms"). */
+	
 	resetRequests: string | null;
 	remainingTokens: number | null;
 	limitTokens: number | null;
@@ -33,12 +33,7 @@ interface ChatMessage {
 	content: string;
 }
 
-/**
- * Límites OBSERVADOS por modelo, capturados de la propia API:
- * - Groq: de los headers x-ratelimit-* de cada respuesta.
- * - Google: de rate_limit_metadata en errores 429 (única vía pública).
- * Se persisten en data/limits.json para que sobrevivan a reinicios.
- */
+
 const DATA_DIR = process.env.DATA_DIR ?? './data';
 const LIMITS_FILE = path.join(DATA_DIR, 'limits.json');
 
@@ -51,7 +46,6 @@ function saveObserved(): void {
 		fs.mkdirSync(DATA_DIR, { recursive: true });
 		fs.writeFileSync(LIMITS_FILE, JSON.stringify(Object.fromEntries(observedLimits.entries())));
 	} catch {
-		// El fallo de persistencia no debe tirar el bot.
 	}
 }
 
@@ -68,7 +62,6 @@ function loadObserved(): void {
 			}
 		}
 	} catch {
-		// JSON corrupto -> vacío.
 	}
 }
 
@@ -80,7 +73,7 @@ function recordObserved(model: string, rateLimits: RateLimits): void {
 	saveObserved();
 }
 
-/** Límites que ya conocemos de un modelo (capturados de la API). */
+
 export function getObservedLimits(model: string): RateLimits | null {
 	return observedLimits.get(model)?.rateLimits ?? null;
 }
@@ -130,7 +123,6 @@ async function groqComplete(
 		throw new Error(data.error?.message ?? `HTTP ${res.status}`);
 	}
 
-	// Cada respuesta trae los límites reales de ESE modelo -> los cacheamos.
 	recordObserved(model, readRateLimits(res.headers));
 
 	return { data, headers: res.headers };
@@ -149,12 +141,12 @@ interface GoogleResponse {
 	};
 	error?: {
 		message?: string;
-		/** Solo aparece cuando se excede una cuota (HTTP 429). */
+		
 		rate_limit_metadata?: Array<{ name?: string; limit?: number; remaining?: number }>;
 	};
 }
 
-/** Convierte rate_limit_metadata de Google (429) a nuestro RateLimits. */
+
 function googleMetadataToLimits(meta: NonNullable<Pick<NonNullable<GoogleResponse['error']>, 'rate_limit_metadata'>['rate_limit_metadata']>): RateLimits {
 	const limits: RateLimits = {
 		remainingRequests: null,
@@ -206,14 +198,12 @@ async function googleComplete(
 	const data = (await res.json()) as GoogleResponse;
 
 	if (!res.ok || data.error) {
-		// En un 429 Google incluye la cuota REAL por modelo. La capturamos.
 		if (res.status === 429 && data.error?.rate_limit_metadata) {
 			recordObserved(model, googleMetadataToLimits(data.error.rate_limit_metadata));
 		}
 		throw new Error(data.error?.message ?? `HTTP ${res.status}`);
 	}
 
-	// Ignorar partes "thought" (modelos con thinking activado) y quedarnos solo con texto final.
 	const parts = data.candidates?.[0]?.content?.parts ?? [];
 	const text = parts
 		.filter((p) => !p.thought && typeof p.text === 'string')
@@ -232,10 +222,7 @@ async function googleComplete(
 	};
 }
 
-/**
- * Construye el system prompt a partir del idioma configurado + prompt custom.
- * IMPORTANTE: la IA SIEMPRE responde en el idioma configurado, nunca en el de la pregunta.
- */
+
 function buildSystemPrompt(userId: string): string {
 	const lang = getLanguage(userId);
 	const custom = getPrompt(userId);
@@ -250,7 +237,6 @@ function buildSystemPrompt(userId: string): string {
 function buildMessages(userId: string, question: string): ChatMessage[] {
 	const messages: ChatMessage[] = [{ role: 'system', content: buildSystemPrompt(userId) }];
 
-	// Contexto: ventana del usuario, cada mensaje recortado a 400 chars para acotar tokens.
 	for (const h of getHistory(userId)) {
 		messages.push({
 			role: h.role,
@@ -261,12 +247,7 @@ function buildMessages(userId: string, question: string): ChatMessage[] {
 	return messages;
 }
 
-/**
- * Envía una pregunta al provider del modelo (Groq o Google).
- * @param question texto del usuario
- * @param overrideModel modelo opcional one-time; si no viene usa el modelo por defecto del usuario
- * @param userId para recuperar su modelo/prompt/idioma
- */
+
 export async function ask(question: string, overrideModel: string | null, userId: string): Promise<AskResult> {
 	const model = overrideModel ?? getModel(userId);
 	const m = MODELS[model];
@@ -298,10 +279,7 @@ export async function ask(question: string, overrideModel: string | null, userId
 	};
 }
 
-/**
- * Consulta los límites EN VIVO de un modelo de Groq con una llamada mínima (1 token).
- * Groq no tiene endpoint de uso; los headers de rate limit vienen en cada respuesta.
- */
+
 export async function fetchGroqUsage(model: string): Promise<RateLimits> {
 	if (!MODELS[model] || MODELS[model].provider !== 'groq') {
 		throw new Error(`Modelo no disponible: ${model}`);
@@ -310,10 +288,7 @@ export async function fetchGroqUsage(model: string): Promise<RateLimits> {
 	return readRateLimits(headers);
 }
 
-/**
- * Límites "frescos" de un modelo de Groq: usa lo observado (API) si tiene <60s,
- * si no hace un ping mínimo de 1 token para refrescarlos. Devuelve null si falla.
- */
+
 export async function refreshGroqLimits(model: string): Promise<RateLimits | null> {
 	if (!MODELS[model] || MODELS[model].provider !== 'groq') return null;
 	const cached = observedLimits.get(model);

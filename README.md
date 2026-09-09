@@ -98,3 +98,87 @@ Push a `main` = bot actualizado en ≤1 minuto.
 
 - Los tokens van solo en `.env` (nunca en el repo).
 - El contenedor solo necesita salida HTTPS a `api.groq.com`, `generativelanguage.googleapis.com` y `discord.com` + acceso al repo `git` — no expone puertos.
+
+## Configuración (YAML)
+
+Todo el comportamiento del bot se puede configurar sin tocar código fuente. Los archivos de configuración están en la raíz del proyecto:
+
+### config.yaml
+
+Configuración principal del bot. Ejemplo con todos los valores disponibles:
+
+```yaml
+bot:
+  default_model: openai/gpt-oss-120b    # Modelo por defecto para nuevos usuarios
+  default_lang: en                       # Idioma por defecto (en/es)
+  cooldown_seconds: 3                    # Cooldown entre preguntas
+  shared_daily_limit: 1000               # Límite diario compartido entre todos los modelos
+  history_limit: 6                       # Mensajes de contexto por usuario
+  data_dir: ./data                       # Carpeta de persistencia
+
+ai:
+  default_prompt_en: "You are SharkAI..." # Prompt del sistema en inglés
+  default_prompt_es: "Eres SharkAI..."    # Prompt del sistema en español
+  temperature: 0.7                         # Temperatura de generación
+  max_tokens: 4096                         # Tokens máximos por respuesta
+
+providers:
+  groq:
+    label: Groq
+    endpoint: https://api.groq.com/openai/v1/chat/completions
+    api_key_env: GROQ_API_KEY
+  google:
+    label: Google
+    endpoint: https://generativelanguage.googleapis.com/v1beta/models
+    api_key_env: GOOGLE_API_KEY
+
+models:
+  openai/gpt-oss-120b:
+    name: GPT-OSS 120B
+    provider: groq
+    description: "OpenAI open-source model (120B)..."
+    tpm: 8000
+    rpm: 1000
+    rpd: 1000
+    context: 131072
+    multimodal: false
+  # ... agregar más modelos aquí
+
+model_emojis:
+  openai/gpt-oss-120b: "<:openai:1547015408110800967>"
+  # ... mapeo modelo → emoji personalizado de Discord
+```
+
+### strings.yaml
+
+Todas las cadenas de texto del bot (comandos, respuestas, traducciones). Editable por el host para personalizar textos sin recompilar:
+
+```yaml
+commands:
+  sh:
+    name: "sh"
+    description: "SharkAI: all-in-one AI assistant"
+    subcommands:
+      ask:
+        description: "Ask something using your default model"
+        options:
+          message:
+            description: "What you want to ask"
+            type: 3
+            required: true
+      # ... otros subcomandos
+
+responses:
+  en:
+    h1ModelUpdated: "Default model updated"
+    cooldown: "Wait {{0}}s between questions."
+    error: "Error: {{0}}"
+    # ... todas las cadenas en inglés
+  es:
+    h1ModelUpdated: "Modelo por defecto actualizado"
+    cooldown: "Espera {{0}}s entre preguntas."
+    error: "Error: {{0}}"
+    # ... todas las cadenas en español
+```
+
+Los placeholders `{{0}}`, `{{1}}` se reemplazan por los argumentos en runtime. Para agregar un nuevo idioma, copiar una sección `en` o `es` y renombrarla.

@@ -7,6 +7,7 @@ import {
 import {
 	MODELS,
 	CHAT_MODEL_IDS,
+	MODEL_EMOJI,
 	type Language,
 	LANGUAGE_CHOICES,
 	languageLabel,
@@ -27,8 +28,8 @@ import {
 	resetUser,
 } from '../store.js';
 import { ask, fetchGroqUsage, refreshGroqLimits, getObservedLimits } from '../providers.js';
-import { recordRequest, getUsage, DAILY_LIMIT } from '../usage.js';
-import { t } from '../ui.js';
+import { recordRequest, getModelUsage } from '../usage.js';
+import { t } from '../strings.js';
 import {
 	V2Component,
 	replyComponents,
@@ -39,82 +40,50 @@ import {
 	heading,
 } from '../components.js';
 
-/**
- * Emoji de modelo/provider (custom emojis del usuario).
- * Se muestra en el footer del /sh ask y en el selector de modelos.
- */
-const MODEL_EMOJI: Record<string, string> = {
-	// OpenAI (gpt-oss)
-	'openai/gpt-oss-120b': '<:openai:1547015408110800967>',
-	'openai/gpt-oss-20b': '<:openai:1547015408110800967>',
-	'openai/gpt-oss-safeguard-20b': '<:openai:1547015408110800967>',
-	// Qwen
-	'qwen/qwen3.6-27b': '<:qwen:1547015425496195073>',
-	'qwen/qwen3.8-27b': '<:qwen:1547015425496195073>',
-	// Groq nativos
-	'groq/compound': '<:groq:1547015390939320320>',
-	'groq/compound-mini': '<:groq:1547015390939320320>',
-	// Google
-	'gemini-2.5-flash': '<:google:1547015367174397952>',
-	'gemini-2.5-flash-lite': '<:google:1547015367174397952>',
-	'gemini-3-flash-preview': '<:google:1547015367174397952>',
-	'gemini-3.1-flash-lite': '<:google:1547015367174397952>',
-	'gemini-3.5-flash': '<:google:1547015367174397952>',
-	'gemini-3.5-flash-lite': '<:google:1547015367174397952>',
-	'gemini-3.6-flash': '<:google:1547015367174397952>',
-	'gemini-3.7-flash': '<:google:1547015367174397952>',
-	'gemini-3.8-flash': '<:google:1547015367174397952>',
-};
 
-function modelEmoji(id: string): string {
+
+export function modelEmoji(id: string): string {
 	return MODEL_EMOJI[id] ?? '';
 }
 
-/**
- * Selector de modelos: aquí (y solo aquí, más la info del modelo y /sh usage)
- * se muestra el provider de cada modelo. El emoji va delante del nombre.
- */
 const MODEL_CHOICES = CHAT_MODEL_IDS.map((id) => ({
-	name: `${modelEmoji(id)} ${MODELS[id].name} (${PROVIDER_LABEL[MODELS[id].provider]})`,
+	name: `${MODELS[id].name} (${PROVIDER_LABEL[MODELS[id].provider]})`,
 	value: id,
 }));
 
-// Cooldown por usuario para no castigar el rate limit del free tier.
+
 const COOLDOWN_MS = Math.max(0, parseInt(process.env.COOLDOWN_SECONDS ?? '3', 10) || 0) * 1000;
 const lastAsk = new Map<string, number>();
 
-// Presupuesto de texto en components (límite API: 4000 chars combinados).
+
 const CHARS_BUDGET = 4000;
 
-/** Fondo neutro (gris oscuro de Discord) para los contenedores. */
+
 const BOX_BG = 0xff5faf;
 
-/** Caja con "fondo": container(17) con un accent_color neutro. */
+
 function box(inner: V2Component[]): V2Component {
 	return { type: 17, components: inner, accent_color: BOX_BG };
 }
 
-/** Título como heading (nivel 1) dentro de una caja. */
+
 function boxTitle(title: string): V2Component {
 	return heading(title, 1);
 }
 
-/** Línea pequeña/tenue para hints. */
+
 function hint(content: string): V2Component {
 	return text(`-# ${content}`);
 }
 
-/** Formatea TPM en notación compacta: 8100 -> 7.9K */
+
 function fmtK(n: number | null | undefined): string {
 	if (n === null || n === undefined) return '?';
 	if (n >= 1000) return `${(n / 1000).toFixed(1).replace(/\.0$/, '')}K`;
 	return String(n);
 }
 
-/**
- * Footer estilo heist.lol: emoji de modelo + uso diario COMPARTIDO entre todos
- * los modelos/providers (todos tiran de la misma cuota). Sin nombres de provider.
- */
+
 function footer(emoji: string | undefined, model: string, used: number, limit: number): string {
 	const e = emoji ? `${emoji} ` : '';
 	return `-# ${e}${model}・${used}/${limit} daily・Results are AI generated`;
@@ -124,7 +93,7 @@ export const shCommand = {
 	data: new SlashCommandBuilder()
 		.setName('sh')
 		.setDescription('SharkAI: all-in-one AI assistant')
-		// App instalable por USUARIO (0=server install, 1=user install)
+		
 		.setIntegrationTypes([ApplicationIntegrationType.UserInstall])
 		.setContexts([InteractionContextType.BotDM, InteractionContextType.PrivateChannel])
 		.addSubcommand((s) =>
@@ -240,7 +209,7 @@ async function handleAsk(interaction: ChatInputCommandInteraction): Promise<void
 	const overrideModel = interaction.options.getString('model');
 	const visible = interaction.options.getBoolean('visible') ?? true;
 
-	// Cooldown por usuario.
+	
 	const now = Date.now();
 	const last = lastAsk.get(interaction.user.id);
 	if (last && now - last < COOLDOWN_MS) {
@@ -249,7 +218,14 @@ async function handleAsk(interaction: ChatInputCommandInteraction): Promise<void
 		return;
 	}
 
-	await deferComponents(interaction, { ephemeral: !visible });
+	const thinkingModelId = overrideModel ?? getModel(interaction.user.id);
+	const thinkingModelName = MODELS[thinkingModelId]?.name ?? 'AI';
+	const thinkingEmoji = modelEmoji(thinkingModelId);
+	await replyComponents(
+		interaction,
+		[box([text(t(lang, 'thinkingText', `${thinkingEmoji} ${thinkingModelName}`))])],
+		{ ephemeral: !visible },
+	);
 
 	try {
 		lastAsk.set(interaction.user.id, Date.now());
@@ -257,26 +233,22 @@ async function handleAsk(interaction: ChatInputCommandInteraction): Promise<void
 		const model = result.model;
 		const emoji = modelEmoji(model);
 
-		// Guardar en la ventana de contexto (se poda a HISTORY_LIMIT automáticamente).
 		appendHistory(interaction.user.id, 'user', question);
 		appendHistory(interaction.user.id, 'assistant', result.text);
 
-		// Uso compartido entre todos los modelos/providers (misma cuota).
-		recordRequest(result.provider);
-		const usage = getUsage();
+		recordRequest(result.provider, result.model);
+		const mu = getModelUsage(model);
 
-		// Respuesta truncada para no romper el presupuesto de 4000 chars.
 		const answerMax = CHARS_BUDGET - 200;
 		const answerText =
 			result.text.length > answerMax
 				? `${result.text.slice(0, answerMax - 1)}${t(lang, 'answerTruncated')}`
 				: result.text;
 
-		// Respuesta -> separador -> footer pequeño. Sin título.
 		const components: V2Component[] = [
 			text(answerText),
 			separator(),
-			text(footer(emoji, model, usage.requests, DAILY_LIMIT)),
+			text(footer(emoji, model, mu.used, mu.limit)),
 		];
 
 		await editComponents(interaction, components);
@@ -286,12 +258,7 @@ async function handleAsk(interaction: ChatInputCommandInteraction): Promise<void
 	}
 }
 
-/**
- * Info de un modelo: catálogo (config) + límites EN VIVO por modelo sacados de la API.
- * - Groq: ping mínimo (1 token) a ese modelo, los headers x-ratelimit-* traen sus límites reales.
- * - Google: su API no expone límites en resoluciones normales; los capturamos de los 429
- *   (rate_limit_metadata) cuando pasan, o usamos la cuota publicada del free tier.
- */
+
 async function modelInfoText(m: AIModel): Promise<string> {
 	let info = formatLimits(m);
 	if (m.provider === 'groq') {
@@ -333,7 +300,7 @@ async function handleModel(interaction: ChatInputCommandInteraction): Promise<vo
 		return;
 	}
 
-	// Sin argumento: ver el actual
+	
 	const current = getModel(interaction.user.id);
 	const m = MODELS[current];
 	const components: V2Component[] = [
@@ -368,7 +335,7 @@ async function handlePrompt(interaction: ChatInputCommandInteraction): Promise<v
 		return;
 	}
 
-	// Sin args: mostrar el actual
+	
 	const current = getPrompt(interaction.user.id);
 	if (current) {
 		await replyComponents(
@@ -406,23 +373,25 @@ async function handleUsage(interaction: ChatInputCommandInteraction): Promise<vo
 	await deferComponents(interaction, { ephemeral: true });
 
 	try {
-		// Uso diario COMPARTIDO entre todos los modelos/providers.
-		const usage = getUsage();
-
-		// Límites en vivo: Groq los devuelve en los headers de cada respuesta.
-		// Si el modelo del usuario es de Google, consultamos el modelo Groq por defecto.
 		const groqModel = MODELS[model]?.provider === 'groq' ? model : 'openai/gpt-oss-120b';
 		const rl = await fetchGroqUsage(groqModel);
 		const resetRequests = rl.resetRequests ? `\`${rl.resetRequests}\`` : '?';
 		const resetTokens = rl.resetTokens ? `\`${rl.resetTokens}\`` : '?';
+
+		const modelLines = CHAT_MODEL_IDS.map((id) => {
+			const mu = getModelUsage(id);
+			if (mu.limit === 0) return null;
+			const e = modelEmoji(id);
+			const pfx = e ? `${e} ` : '';
+			return `${pfx}${MODELS[id].name}: \`${mu.used}/${mu.limit}\``;
+		}).filter(Boolean);
 
 		const inner: V2Component[] = [
 			boxTitle(t(lang, 'usageTitle')),
 			separator(),
 			text(
 				`## ${t(lang, 'usageShared')}\n` +
-					`\`${usage.requests}/${DAILY_LIMIT}\` daily · ` +
-					`Groq: \`${usage.byProvider.groq}\` · Google: \`${usage.byProvider.google}\``,
+					(modelLines.length ? modelLines.join('\n') : '-'),
 			),
 			separator(),
 			text(
@@ -434,7 +403,7 @@ async function handleUsage(interaction: ChatInputCommandInteraction): Promise<vo
 			),
 		];
 
-		// Google no expone límites en headers: usamos lo capturado en 429 (rate_limit_metadata).
+		
 		if (MODELS[model]?.provider === 'google') {
 			const goog = getObservedLimits(model);
 			if (goog?.limitRequests || goog?.limitTokens) {

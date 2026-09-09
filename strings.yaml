@@ -1,0 +1,151 @@
+commands:
+  sh:
+    name: "sh"
+    description: "SharkAI: all-in-one AI assistant"
+    integration_types:
+      - 0
+      - 1
+    contexts:
+      - 0
+      - 1
+      - 2
+    subcommands:
+      ask:
+        description: "Ask something using your default model"
+        options:
+          message:
+            description: "What you want to ask"
+            type: 3
+            required: true
+          model:
+            description: "One-time model override for this question"
+            type: 3
+            required: false
+            choices:
+          visible:
+            description: "True = visible for everyone (default). False = only you (ephemeral)"
+            type: 5
+            required: false
+      model:
+        description: "View or change your default model"
+        options:
+          model:
+            description: "Model (omitting shows the current one)"
+            type: 3
+            required: false
+            choices:
+          info:
+            description: "Show model limits (default: true)"
+            type: 5
+            required: false
+      prompt:
+        description: "View or change your custom system prompt"
+        options:
+          text:
+            description: "New custom prompt (used instead of the default)"
+            type: 3
+            required: false
+          clear:
+            description: "Go back to the default prompt"
+            type: 5
+            required: false
+      language:
+        description: "Language of bot UI and AI answers"
+        options:
+          language:
+            description: "Language"
+            type: 3
+            required: false
+            choices:
+              en: English
+              es: Español
+      usage:
+        description: "Show your shared usage and live limits"
+        options: {}
+      new:
+        description: "Start a new conversation (clears context)"
+        options: {}
+      status:
+        description: "Show your current configuration"
+        options: {}
+      reset:
+        description: "Reset all your settings to defaults"
+        options: {}
+
+responses:
+  en:
+    answerTruncated: '…'
+    thinkingText: '{{0}} is thinking…'
+    cooldown: 'Wait {{0}}s between questions.'
+    error: 'Error: {{0}}'
+    factCheckPrompt: 'You are a fact-checking expert. Analyze the following message and verify whether its claims are accurate, misleading, or false. Provide evidence and sources when possible. Be concise and direct.\n\nMessage to fact-check:\n> {{0}}'
+    replyPrompt: 'You are a helpful assistant. Reply to the following message directly and concisely. Don''t start with AI-like preambles. Don''t ask clarifying questions — just give the best answer you can.\n\nMessage to reply to:\n> {{0}}'
+    makeVisible: '👁 Make Visible'
+    contextThinking: '{{0}} is thinking…'
+    contextResult: '{{0}} result'
+    h1LanguageSet: 'Language set'
+    h1ModelCurrent: 'Your current model'
+    h1ModelUpdated: 'Default model updated'
+    h1New: 'New conversation'
+    h1PromptCleared: 'Prompt reset'
+    h1PromptCurrent: 'Your current prompt'
+    h1PromptEmpty: 'No custom prompt'
+    h1PromptUpdated: 'Custom prompt saved'
+    h1Reset: 'Settings reset'
+    h1Status: 'Your SharkAI configuration'
+    invalidLanguage: 'Invalid language.'
+    invalidModel: 'Invalid model: `{{0}}`'
+    noPrompt: "(default)"
+    promptHint: 'Use `/sh prompt text:...` to change it, `/sh prompt clear:true` to reset.'
+    resetBody: "Model: {{0}}\nPrompt: default\nLanguage: English"
+    statusContext: 'Context'
+    statusContextMsgs: 'messages'
+    statusLanguage: 'Language'
+    statusModel: 'Model'
+    statusPrompt: 'Prompt'
+    unknownSub: 'Unknown subcommand.'
+    usageError: 'Could not fetch limits: {{0}}'
+    usageLive: 'Live limits'
+    usageRequestsTag: 'requests'
+    usageReset: 'Reset in'
+    usageShared: "Shared across all models (same API quota)"
+    usageTitle: 'Usage'
+    usageTokensTag: 'TPM'
+  es:
+    answerTruncated: '…'
+    thinkingText: '{{0}} está pensando…'
+    cooldown: 'Espera {{0}}s entre preguntas.'
+    error: 'Error: {{0}}'
+    factCheckPrompt: 'Eres un experto en verificación de hechos. Analiza el siguiente mensaje y verifica si sus afirmaciones son precisas, engañosas o falsas. Proporciona evidencia y fuentes cuando sea posible. Sé conciso y directo.\n\nMensaje a verificar:\n> {{0}}'
+    replyPrompt: 'Eres un asistente útil. Responde al siguiente mensaje de forma directa y concisa. No empieces con preámbulos tipo IA. No hagas preguntas de clarificación — simplemente da la mejor respuesta que puedas.\n\nMensaje al que responder:\n> {{0}}'
+    makeVisible: '👁 Hacer visible'
+    contextThinking: '{{0}} está pensando…'
+    contextResult: 'Resultado de {{0}}'
+    h1LanguageSet: 'Idioma configurado'
+    h1ModelCurrent: 'Tu modelo por defecto'
+    h1ModelUpdated: 'Modelo por defecto actualizado'
+    h1New: 'Nueva conversación'
+    h1PromptCleared: 'Prompt restablecido'
+    h1PromptCurrent: 'Tu prompt actual'
+    h1PromptEmpty: 'Sin prompt personalizado'
+    h1PromptUpdated: 'Prompt personalizado guardado'
+    h1Reset: 'Ajustes reiniciados'
+    h1Status: 'Tu configuración de SharkAI'
+    invalidLanguage: 'Idioma no válido.'
+    invalidModel: 'Modelo no válido: `{{0}}`'
+    noPrompt: "(por defecto)"
+    promptHint: 'Usa `/sh prompt text:...` para cambiarlo, `/sh prompt clear:true` para resetear.'
+    resetBody: "Modelo: {{0}}\nPrompt: por defecto\nIdioma: Español"
+    statusContext: 'Contexto'
+    statusContextMsgs: 'mensajes'
+    statusLanguage: 'Idioma'
+    statusModel: 'Modelo'
+    statusPrompt: 'Prompt'
+    unknownSub: 'Subcomando desconocido.'
+    usageError: 'No pude consultar los límites: {{0}}'
+    usageLive: 'Límites en vivo'
+    usageRequestsTag: 'peticiones'
+    usageReset: 'Reset en'
+    usageShared: "Compartido entre todos los modelos (misma cuota de API)"
+    usageTitle: 'Uso'
+    usageTokensTag: 'TPM'
