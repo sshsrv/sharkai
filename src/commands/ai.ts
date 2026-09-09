@@ -6,6 +6,7 @@ import {
 } from 'discord.js';
 import {
 	MODELS,
+	DEFAULT_MODEL,
 	CHAT_MODEL_IDS,
 	MODEL_EMOJI,
 	type Language,
@@ -373,7 +374,7 @@ async function handleUsage(interaction: ChatInputCommandInteraction): Promise<vo
 	await deferComponents(interaction, { ephemeral: true });
 
 	try {
-		const groqModel = MODELS[model]?.provider === 'groq' ? model : 'openai/gpt-oss-120b';
+		const groqModel = MODELS[model]?.provider === 'groq' ? model : Object.values(MODELS).find(m => m.provider === 'groq')?.id ?? model;
 		const rl = await fetchGroqUsage(groqModel);
 		const resetRequests = rl.resetRequests ? `\`${rl.resetRequests}\`` : '?';
 		const resetTokens = rl.resetTokens ? `\`${rl.resetTokens}\`` : '?';
