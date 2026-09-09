@@ -3,12 +3,13 @@ import {
   ApplicationCommandType,
   MessageContextMenuCommandInteraction,
   ButtonInteraction,
+  Routes,
 } from 'discord.js';
 import { randomBytes } from 'node:crypto';
 import { MODELS, DEFAULT_MODEL, DEFAULT_PROMPT_EN, DEFAULT_PROMPT_ES } from '../config.js';
 import { getModel, getPrompt, getLanguage } from '../store.js';
 import { ask } from '../providers.js';
-import { recordRequest } from '../usage.js';
+import { recordRequest, getModelUsage } from '../usage.js';
 import { t } from '../strings.js';
 import {
   replyComponents,
@@ -21,20 +22,34 @@ import {
   type V2Component} from '../components.js';
 import { modelEmoji } from './ai.js';
 
-const pendingVisibility = new Map<string, string>();
+interface PendingData {
+  text: string;
+  modelId: string;
+  emoji: string;
+  used: number;
+  limit: number;
+  targetMessageId: string;
+}
+
+const pendingVisibility = new Map<string, PendingData>();
 
 function genId(): string {
   return randomBytes(8).toString('hex');
 }
 
-export function getPendingContent(id: string): string | undefined {
-  const content = pendingVisibility.get(id);
+export function getPendingData(id: string): PendingData | undefined {
+  const data = pendingVisibility.get(id);
   pendingVisibility.delete(id);
-  return content;
+  return data;
 }
 
 function defaultPrompt(lang: string): string {
   return lang === 'es' ? DEFAULT_PROMPT_ES : DEFAULT_PROMPT_EN;
+}
+
+function footer(emoji: string | undefined, model: string, used: number, limit: number): string {
+  const e = emoji ? `${emoji} ` : '';
+  return `-# ${e}${model}・${used}/${limit} daily・Results are AI generated`;
 }
 
 async function runContextAction(
@@ -64,6 +79,7 @@ async function runContextAction(
 
     const resultModel = MODELS[result.model] ?? model;
     const emoji = modelEmoji(result.model);
+    const mu = getModelUsage(result.model);
 
     const CHARS_BUDGET = 1900;
     const answerText =
@@ -72,7 +88,14 @@ async function runContextAction(
         : result.text;
 
     const contentId = genId();
-    pendingVisibility.set(contentId, answerText);
+    pendingVisibility.set(contentId, {
+      text: answerText,
+      modelId: result.model,
+      emoji,
+      used: mu.used,
+      limit: mu.limit,
+      targetMessageId: interaction.targetMessage.id,
+    });
 
     const components: V2Component[] = [
       box([
@@ -90,13 +113,25 @@ async function runContextAction(
 
 export async function handleMakeVisible(interaction: ButtonInteraction): Promise<void> {
   const contentId = interaction.customId.split(':')[1];
-  const content = contentId ? getPendingContent(contentId) : undefined;
-  if (!content) {
+  const data = contentId ? getPendingData(contentId) : undefined;
+  if (!data) {
     await interaction.reply({ content: '❌ Not available (expired).', ephemeral: true });
     return;
   }
+
+  const content = `${data.text}\n\n${footer(data.emoji, data.modelId, data.used, data.limit)}`;
+
   await interaction.deferReply();
-  await interaction.followUp({ content });
+
+  await interaction.client.rest.post(
+    Routes.webhookMessage(interaction.client.user.id, interaction.token),
+    {
+      body: {
+        content,
+        message_reference: { message_id: data.targetMessageId, fail_if_not_exists: false },
+      },
+    }
+  );
 }
 
 export const factCheckCommand = {

@@ -56,6 +56,7 @@ export const DEFAULT_PROMPT_ES: string =
 
 export const AI_TEMPERATURE: number = raw?.ai?.temperature ?? 0.7;
 export const AI_MAX_TOKENS: number = raw?.ai?.max_tokens ?? 4096;
+export const ACCENT_COLOR: number | undefined = raw?.bot?.accent_color_enabled ? (raw?.bot?.accent_color ?? 0x5865F2) : undefined;
 
 export const env = {
   discordToken: process.env.DISCORD_TOKEN ?? '',

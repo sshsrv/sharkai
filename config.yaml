@@ -5,6 +5,8 @@ bot:
  shared_daily_limit: 1000
  history_limit: 6
  data_dir: ./data
+ accent_color: 0x5865F2
+ accent_color_enabled: true
 
 ai:
  default_prompt_en: "You are SharkAI, an intelligence assistant. Answer concisely, precisely and helpfully. No filler, no apologies."

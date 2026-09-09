@@ -39,6 +39,7 @@ import {
 	text,
 	separator,
 	heading,
+	box,
 } from '../components.js';
 
 
@@ -58,14 +59,6 @@ const lastAsk = new Map<string, number>();
 
 
 const CHARS_BUDGET = 4000;
-
-
-const BOX_BG = 0xff5faf;
-
-
-function box(inner: V2Component[]): V2Component {
-	return { type: 17, components: inner, accent_color: BOX_BG };
-}
 
 
 function boxTitle(title: string): V2Component {

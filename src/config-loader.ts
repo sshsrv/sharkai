@@ -25,6 +25,8 @@ export interface BotConfig {
  shared_daily_limit: number;
  history_limit: number;
  data_dir: string;
+ accent_color: number;
+ accent_color_enabled: boolean;
 }
 
 export interface AIConfig {
