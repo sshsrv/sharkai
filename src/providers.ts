@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { env, MODELS, DEFAULT_PROMPT_EN, DEFAULT_PROMPT_ES, type Provider } from './config.js';
+import { env, MODELS, DEFAULT_PROMPT_EN, DEFAULT_PROMPT_ES, AI_TEMPERATURE, AI_MAX_TOKENS, type Provider } from './config.js';
 import { getModel, getPrompt, getLanguage, getHistory } from './store.js';
 
 const GROQ_ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions';
@@ -114,7 +114,7 @@ async function groqComplete(
 			'content-type': 'application/json',
 			authorization: `Bearer ${env.groqApiKey}`,
 		},
-		body: JSON.stringify({ model, messages, temperature: 0.7, max_tokens: maxTokens }),
+		body: JSON.stringify({ model, messages, temperature: AI_TEMPERATURE, max_tokens: maxTokens }),
 	});
 
 	const data = (await res.json()) as GroqResponse;
@@ -191,7 +191,7 @@ async function googleComplete(
 		body: JSON.stringify({
 			system_instruction: system ? { parts: [{ text: system }] } : undefined,
 			contents,
-			generationConfig: { temperature: 0.7, maxOutputTokens: maxTokens },
+			generationConfig: { temperature: AI_TEMPERATURE, maxOutputTokens: maxTokens },
 		}),
 	});
 
@@ -262,11 +262,11 @@ export async function ask(question: string, overrideModel: string | null, userId
 	const messages = buildMessages(userId, question);
 
 	if (m.provider === 'google') {
-		const r = await googleComplete(model, messages, 2048);
+		const r = await googleComplete(model, messages, AI_MAX_TOKENS);
 		return { text: r.text, model, provider: 'google', usage: r.usage };
 	}
 
-	const { data } = await groqComplete(model, messages, 2048);
+	const { data } = await groqComplete(model, messages, AI_MAX_TOKENS);
 	return {
 		text: data.choices?.[0]?.message?.content?.trim() ?? '*(no response)*',
 		model,
