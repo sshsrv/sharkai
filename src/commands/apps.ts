@@ -24,6 +24,7 @@ import {
   editComponents,
   text,
   separator,
+  heading,
   button,
   actionRow,
   box,
@@ -90,6 +91,8 @@ function resultComponents(
 }
 
 function visibleComponents(
+ lang: Language,
+ promptTemplateKey: string,
  targetContent: string,
  answerText: string,
  emoji: string | undefined,
@@ -98,12 +101,15 @@ function visibleComponents(
  limit: number,
  messageUrl: string,
 ): V2Component[] {
- return [box([
- text(`# [${targetContent}](${messageUrl})`),
+ const label = promptTemplateKey === 'factCheckPrompt' ? t(lang, 'factCheckLabel') : t(lang, 'replyLabel');
+ return [
+ heading(t(lang, 'contextResult', label), 2),
+ text(`[${targetContent}](${messageUrl})`),
  separator(),
  text(answerText),
  separator(),
- text(footer(emoji, modelId, used, limit))])];
+ text(footer(emoji, modelId, used, limit)),
+ ];
 }
 
 async function runContextAction(
@@ -181,6 +187,8 @@ export async function handleMakeVisible(interaction: ButtonInteraction): Promise
 
  try {
  const components = visibleComponents(
+ data.lang,
+ data.promptTemplateKey,
  data.targetContent,
  data.text,
  data.emoji,
