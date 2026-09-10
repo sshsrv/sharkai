@@ -24,6 +24,7 @@ import {
   separator,
   button,
   actionRow,
+  box,
   IS_COMPONENTS_V2,
   type V2Component,
 } from '../components.js';
@@ -70,7 +71,7 @@ function resultComponents(
   answerText: string,
   contentId: string,
 ): V2Component[] {
-  return [
+  return [box([
     text(`# ${targetContent}`),
     separator(),
     text(answerText),
@@ -79,25 +80,26 @@ function resultComponents(
       button(t(lang, 'addContext'), `add_context:${contentId}`, 2),
       button(t(lang, 'makeVisible'), `make_visible:${contentId}`, 2),
     ),
-  ];
+  ])];
 }
 
 function visibleComponents(
-  targetContent: string,
-  answerText: string,
-  emoji: string | undefined,
-  modelName: string,
-  used: number,
-  limit: number,
-  messageUrl: string,
+ targetContent: string,
+ answerText: string,
+ emoji: string | undefined,
+ modelName: string,
+ used: number,
+ limit: number,
+ messageUrl: string,
 ): V2Component[] {
-  const e = emoji ? `${emoji} ` : '';
-  const footer = `---\n-# [Original message](${messageUrl}) · ${e}${modelName}\u00b7${used}/${limit} daily\u00b7Results are AI generated`;
-  return [
-    text(`# ${targetContent}`),
-    separator(),
-    text(`${answerText}\n\n${footer}`),
-  ];
+ const e = emoji ? `${emoji} ` : '';
+ return [box([
+ text(`# [${targetContent}](${messageUrl})`),
+ separator(),
+ text(answerText),
+ separator(),
+ text(`-# ${e}${modelName}·${used}/${limit} daily·Results are AI generated`),
+ ])];
 }
 
 async function runContextAction(
