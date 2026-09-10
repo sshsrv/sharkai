@@ -61,6 +61,30 @@ function defaultPrompt(lang: Language): string {
   return lang === 'es' ? DEFAULT_PROMPT_ES : DEFAULT_PROMPT_EN;
 }
 
+const CHARS_BUDGET = 4000;
+
+function cleanAnswer(text: string, promptTemplateKey: string): string {
+ let out = text;
+ if (out.length > CHARS_BUDGET - 200) {
+  out = out.slice(0, CHARS_BUDGET - 200);
+  const nl = out.lastIndexOf('\n');
+  if (nl > CHARS_BUDGET * 0.6) out = out.slice(0, nl);
+  if (out.lastIndexOf('[', out.length - 1) > out.length - 200) {
+   const lineStart = out.lastIndexOf('\n');
+   out = out.slice(0, lineStart === -1 ? 0 : lineStart);
+  }
+  out = `${out.replace(/\s+$/, '')}\n\u2026`;
+ }
+ if (promptTemplateKey === 'factCheckPrompt') {
+  out = out
+   .replace(/\n{3,}/g, '\n\n')
+   .replace(/\n{2,}(?=## )/g, '\n')
+   .replace(/(## [^\n]+\n)\n+/g, '$1')
+   .replace(/\n{2,}(?=- )/g, '\n');
+ }
+ return out;
+}
+
 function thinkingComponents(lang: Language, emoji: string, name: string): V2Component[] {
   return [text(t(lang, 'contextThinking', `${emoji} ${name}`))];
 }
@@ -142,11 +166,7 @@ async function runContextAction(
     const emoji = modelEmoji(result.model);
     const mu = getModelUsage(result.model);
 
-    const CHARS_BUDGET = 1900;
-    const answerText =
-      result.text.length > CHARS_BUDGET
-        ? `${result.text.slice(0, CHARS_BUDGET - 1)}\u2026`
-        : result.text;
+const answerText = cleanAnswer(result.text, promptTemplateKey);
 
 const contentId = genId();
  pendingVisibility.set(contentId, {
@@ -258,11 +278,7 @@ export async function handleContextModal(interaction: ModalSubmitInteraction): P
     const emoji = modelEmoji(result.model);
     const mu = getModelUsage(result.model);
 
-    const CHARS_BUDGET = 1900;
-    const answerText =
-      result.text.length > CHARS_BUDGET
-        ? `${result.text.slice(0, CHARS_BUDGET - 1)}\u2026`
-        : result.text;
+const answerText = cleanAnswer(result.text, data.promptTemplateKey);
 
     const newContentId = genId();
  pendingVisibility.set(newContentId, {
