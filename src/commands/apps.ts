@@ -10,7 +10,6 @@ import {
   TextInputBuilder,
   TextInputStyle,
   MessageContextMenuCommandInteraction,
-  Routes,
 } from 'discord.js';
 import { randomBytes } from 'node:crypto';
 import { MODELS, DEFAULT_MODEL, DEFAULT_PROMPT_EN, DEFAULT_PROMPT_ES } from '../config.js';
@@ -18,7 +17,7 @@ import { t } from '../strings.js';
 import { getModel, getPrompt, getLanguage } from '../store.js';
 import { ask } from '../providers.js';
 import { recordRequest, getModelUsage } from '../usage.js';
-import { modelEmoji } from './ai.js';
+import { footer, modelEmoji } from './ai.js';
 import {
   replyComponents,
   editComponents,
@@ -68,40 +67,43 @@ function thinkingComponents(lang: Language, emoji: string, name: string): V2Comp
 }
 
 function resultComponents(
-  lang: Language,
-  targetContent: string,
-  answerText: string,
-  contentId: string,
+ lang: Language,
+ targetContent: string,
+ answerText: string,
+ contentId: string,
+ messageUrl: string,
+ emoji: string | undefined,
+ modelId: string,
+ used: number,
+ limit: number,
 ): V2Component[] {
-  return [box([
-    text(`# ${targetContent}`),
-    separator(),
-    text(answerText),
-    separator(),
-    actionRow(
-      button(t(lang, 'addContext'), `add_context:${contentId}`, 2),
-      button(t(lang, 'makeVisible'), `make_visible:${contentId}`, 2),
-    ),
-  ])];
+ return [box([
+ text(`# [${targetContent}](${messageUrl})`),
+ separator(),
+ text(answerText),
+ separator(),
+ text(footer(emoji, modelId, used, limit)),
+ actionRow(
+ button(t(lang, 'addContext'), `add_context:${contentId}`, 2),
+ button(t(lang, 'makeVisible'), `make_visible:${contentId}`, 2),
+ )])];
 }
 
 function visibleComponents(
  targetContent: string,
  answerText: string,
  emoji: string | undefined,
- modelName: string,
+ modelId: string,
  used: number,
  limit: number,
  messageUrl: string,
 ): V2Component[] {
- const e = emoji ? `${emoji} ` : '';
  return [box([
  text(`# [${targetContent}](${messageUrl})`),
  separator(),
  text(answerText),
  separator(),
- text(`-# ${e}${modelName}·${used}/${limit} daily·Results are AI generated`),
- ])];
+ text(footer(emoji, modelId, used, limit))])];
 }
 
 async function runContextAction(
@@ -138,7 +140,7 @@ async function runContextAction(
         ? `${result.text.slice(0, CHARS_BUDGET - 1)}\u2026`
         : result.text;
 
-    const contentId = genId();
+const contentId = genId();
  pendingVisibility.set(contentId, {
  text: answerText,
  targetContent,
@@ -151,13 +153,15 @@ async function runContextAction(
  guildId: interaction.guildId,
  promptTemplateKey,
  originalPrompt: fullPrompt,
- lang,
- });
+ lang});
 
-    await editComponents(
-      interaction,
-      resultComponents(lang, targetContent, answerText, contentId),
-    );
+ const guildPart = interaction.guildId ?? '@me';
+ const messageUrl = `https://discord.com/channels/${guildPart}/${interaction.channelId}/${interaction.targetMessage.id}`;
+
+ await editComponents(
+ interaction,
+ resultComponents(lang, targetContent, answerText, contentId, messageUrl, emoji, result.model, mu.used, mu.limit),
+ );
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     await editComponents(interaction, [text(t(lang, 'error', message))]);
@@ -165,48 +169,31 @@ async function runContextAction(
 }
 
 export async function handleMakeVisible(interaction: ButtonInteraction): Promise<void> {
-  const contentId = interaction.customId.split(':')[1];
-  const data = contentId ? getPendingData(contentId) : undefined;
-  if (!data) {
-    await interaction.reply({ content: 'Not available (expired).', ephemeral: true });
-    return;
-  }
+ const contentId = interaction.customId.split(':')[1];
+ const data = contentId ? getPendingData(contentId) : undefined;
+ if (!data) {
+ await interaction.reply({ content: 'Not available (expired).', ephemeral: true });
+ return;
+ }
 
-  const resultModel = MODELS[data.modelId];
-  const guildPart = data.guildId ?? '@me';
-  const messageUrl = `https://discord.com/channels/${guildPart}/${data.channelId}/${data.targetMessageId}`;
+ const guildPart = data.guildId ?? '@me';
+ const messageUrl = `https://discord.com/channels/${guildPart}/${data.channelId}/${data.targetMessageId}`;
 
-  await interaction.deferReply({ ephemeral: true });
+ try {
+ const components = visibleComponents(
+ data.targetContent,
+ data.text,
+ data.emoji,
+ data.modelId,
+ data.used,
+ data.limit,
+ messageUrl,
+ );
 
-  try {
-    const components = visibleComponents(
-      data.targetContent,
-      data.text,
-      data.emoji,
-      resultModel?.name ?? data.modelId,
-      data.used,
-      data.limit,
-      messageUrl,
-    );
-
-    await interaction.client.rest.post(
-      Routes.webhook(interaction.client.user.id, interaction.token),
-      {
-        body: {
-          flags: IS_COMPONENTS_V2,
-          components,
-          message_reference: {
-            message_id: data.targetMessageId,
-            fail_if_not_exists: false,
-          },
-        },
-      },
-    );
-
-    await interaction.editReply({ content: 'Message made visible.' });
-  } catch {
-    await interaction.editReply({ content: 'Could not send message (missing permissions?).' });
-  }
+ await replyComponents(interaction, components);
+ } catch {
+ await interaction.reply({ content: 'Could not send message (missing permissions?).', ephemeral: true });
+ }
 }
 
 export function showAddContextModal(interaction: ButtonInteraction): void {
@@ -283,9 +270,12 @@ export async function handleContextModal(interaction: ModalSubmitInteraction): P
  lang,
  });
 
+    const guildPart = data.guildId ?? '@me';
+    const messageUrl = `https://discord.com/channels/${guildPart}/${data.channelId}/${data.targetMessageId}`;
+
     await interaction.editReply({
       flags: IS_COMPONENTS_V2,
-      components: resultComponents(lang, data.targetContent, answerText, newContentId),
+      components: resultComponents(lang, data.targetContent, answerText, newContentId, messageUrl, emoji, result.model, mu.used, mu.limit),
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
@@ -300,13 +290,13 @@ export const factCheckCommand = new ContextMenuCommandBuilder()
  .setName('Fact-Check')
  .setType(ApplicationCommandType.Message)
  .setIntegrationTypes([ApplicationIntegrationType.UserInstall])
- .setContexts([InteractionContextType.BotDM, InteractionContextType.PrivateChannel]);
+ .setContexts([InteractionContextType.Guild, InteractionContextType.BotDM, InteractionContextType.PrivateChannel]);
 
 export const replyMessageCommand = new ContextMenuCommandBuilder()
  .setName('Reply')
  .setType(ApplicationCommandType.Message)
  .setIntegrationTypes([ApplicationIntegrationType.UserInstall])
- .setContexts([InteractionContextType.BotDM, InteractionContextType.PrivateChannel]);
+ .setContexts([InteractionContextType.Guild, InteractionContextType.BotDM, InteractionContextType.PrivateChannel]);
 
 export async function handleFactCheck(interaction: MessageContextMenuCommandInteraction): Promise<void> {
   await runContextAction(interaction, 'factCheckPrompt');

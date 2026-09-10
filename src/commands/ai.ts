@@ -78,7 +78,7 @@ function fmtK(n: number | null | undefined): string {
 }
 
 
-function footer(emoji: string | undefined, model: string, used: number, limit: number): string {
+export function footer(emoji: string | undefined, model: string, used: number, limit: number): string {
 	const e = emoji ? `${emoji} ` : '';
 	return `-# ${e}${model}・${used}/${limit} daily・Results are AI generated`;
 }
