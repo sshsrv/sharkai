@@ -80,7 +80,8 @@ function cleanAnswer(text: string, promptTemplateKey: string): string {
    .replace(/\n{3,}/g, '\n\n')
    .replace(/\n{2,}(?=## )/g, '\n')
    .replace(/(## [^\n]+\n)\n+/g, '$1')
-   .replace(/\n{2,}(?=- )/g, '\n');
+   .replace(/\n{2,}(?=- )/g, '\n')
+   .replace(/(## (?:Verdict|Veredicto)\n[🟢🟡🟠🔴⚪][^\n]*\n)(?!- )/, '$1- ');
  }
  return out;
 }
