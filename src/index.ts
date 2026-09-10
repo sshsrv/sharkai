@@ -1,7 +1,15 @@
 import { Client, GatewayIntentBits, Events } from 'discord.js';
 import { env } from './config.js';
 import { shCommand } from './commands/ai.js';
-import { factCheckCommand, replyMessageCommand, handleMakeVisible } from './commands/apps.js';
+import {
+  factCheckCommand,
+  replyMessageCommand,
+  handleFactCheck,
+  handleReplyMessage,
+  handleMakeVisible,
+  showAddContextModal,
+  handleContextModal,
+} from './commands/apps.js';
 
 if (!env.discordToken) {
   console.error('❌ Falta DISCORD_TOKEN en el entorno');
@@ -24,8 +32,8 @@ client.once(Events.ClientReady, async (c) => {
   try {
 await c.application?.commands.set([
   shCommand.data.toJSON(),
-  factCheckCommand.data.toJSON(),
-  replyMessageCommand.data.toJSON(),
+factCheckCommand.toJSON(),
+replyMessageCommand.toJSON(),
 ]);
 console.log('✅ Comandos registrados: /sh, Fact-Check, Reply (user-install)');
     const appId = c.user.id;
@@ -46,14 +54,22 @@ client.on(Events.InteractionCreate, async (interaction) => {
  }
  if (interaction.isMessageContextMenuCommand()) {
  if (interaction.commandName === 'Fact-Check') {
- await factCheckCommand.execute(interaction);
+ await handleFactCheck(interaction);
  } else if (interaction.commandName === 'Reply') {
- await replyMessageCommand.execute(interaction);
+ await handleReplyMessage(interaction);
  }
  return;
  }
  if (interaction.isButton() && interaction.customId.startsWith('make_visible:')) {
  await handleMakeVisible(interaction);
+ return;
+ }
+ if (interaction.isButton() && interaction.customId.startsWith('add_context:')) {
+ await showAddContextModal(interaction);
+ return;
+ }
+ if (interaction.isModalSubmit() && interaction.customId.startsWith('context_modal:')) {
+ await handleContextModal(interaction);
  return;
  }
 });

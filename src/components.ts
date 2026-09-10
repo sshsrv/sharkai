@@ -2,6 +2,7 @@ import {
  ChatInputCommandInteraction,
  MessageContextMenuCommandInteraction,
  ButtonInteraction,
+ ModalSubmitInteraction,
  InteractionResponseType,
  Routes} from 'discord.js';
 import { ACCENT_COLOR } from './config.js';
@@ -12,7 +13,8 @@ export const EPHEMERAL = 1 << 6;
 type AnyInteraction =
  ChatInputCommandInteraction |
  MessageContextMenuCommandInteraction |
- ButtonInteraction;
+ ButtonInteraction |
+ ModalSubmitInteraction;
 
 export type V2Component =
  | { type: 10; content: string }
@@ -39,6 +41,9 @@ export const actionRow = (...components: V2Component[]): V2Component =>
 
 export const box = (components: V2Component[]): V2Component =>
  ({ type: 17, components, ...(ACCENT_COLOR !== undefined ? { accent_color: ACCENT_COLOR } : {}) });
+
+export const section = (components: V2Component[]): V2Component =>
+ ({ type: 9, components });
 
 function flags(opts: { ephemeral?: boolean } = {}): number {
  return IS_COMPONENTS_V2 | (opts.ephemeral ? EPHEMERAL : 0);
