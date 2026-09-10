@@ -30,6 +30,7 @@ interface PendingData {
   used: number;
   limit: number;
   targetMessageId: string;
+  messageUrl: string;
 }
 
 const pendingVisibility = new Map<string, PendingData>();
@@ -57,13 +58,16 @@ async function runContextAction(
   interaction: MessageContextMenuCommandInteraction,
   promptTemplateKey: string,
 ): Promise<void> {
-  const lang = getLanguage(interaction.user.id);
-  const modelId = getModel(interaction.user.id);
-  const customPrompt = getPrompt(interaction.user.id);
-  const model = MODELS[modelId] ?? MODELS[DEFAULT_MODEL];
-  const promptBase = customPrompt || defaultPrompt(lang);
-  const targetContent = interaction.targetMessage.content || '(no text content)';
-  const fullPrompt = `${promptBase}\n\n${t(lang, promptTemplateKey, targetContent)}`;
+const lang = getLanguage(interaction.user.id);
+ const modelId = getModel(interaction.user.id);
+ const customPrompt = getPrompt(interaction.user.id);
+ const model = MODELS[modelId] ?? MODELS[DEFAULT_MODEL];
+ const promptBase = customPrompt||defaultPrompt(lang);
+ const targetContent = interaction.targetMessage.content||'(no text content)';
+ const guildId = interaction.guildId ?? '@me';
+ const targetMsgId = interaction.targetMessage.id;
+ const messageUrl = `https://discord.com/channels/${guildId}/${interaction.channelId}/${targetMsgId}`;
+ const fullPrompt = `${promptBase}\n\n${t(lang, promptTemplateKey, targetContent, messageUrl)}`;
 
   const thinkingEmoji = modelEmoji(model.id);
   const thinkingName = model.name;
@@ -96,6 +100,7 @@ async function runContextAction(
       used: mu.used,
       limit: mu.limit,
       targetMessageId: interaction.targetMessage.id,
+      messageUrl,
     });
 
     const components: V2Component[] = [
@@ -120,7 +125,7 @@ export async function handleMakeVisible(interaction: ButtonInteraction): Promise
 		return;
 	}
 
-	const content = `${data.text}\n\n${footer(data.emoji, data.modelId, data.used, data.limit)}`;
+ const content = `${data.text}\n\n---\n${footer(data.emoji, data.modelId, data.used, data.limit)}`;
 
 	await interaction.client.rest.post(
 		Routes.interactionCallback(interaction.id, interaction.token),

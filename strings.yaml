@@ -78,7 +78,7 @@ responses:
     thinkingText: '{{0}} is thinking…'
     cooldown: 'Wait {{0}}s between questions.'
     error: 'Error: {{0}}'
-    factCheckPrompt: 'You are a fact-checking expert. Analyze the following message and verify whether its claims are accurate, misleading, or false. Provide evidence and sources when possible. Be concise and direct.\n\nMessage to fact-check:\n> {{0}}'
+    factCheckPrompt: "You are an expert fact-checker. Analyze the following message and produce a structured fact-check.\n\nYou MUST respond using exactly these 4 sections in this order, using list format:\n\n- **Claim:** Quote or paraphrase the key claim from the message. Include the original message link at the end: [Original message]({{1}})\n- **Verdict:** State your verdict using one of these colored circle emojis: 🟢 True, 🟡 Misleading, 🟠 Half-true, 🔴 False, ⚪ Uncertain. Then a short one-line summary.\n- **Analysis:** Detailed reasoning, evidence, and context. Be concise but thorough.\n- **Sources:** List sources as bullet points with links. If no specific source, state your reasoning basis.\n\nDo NOT add any text outside these 4 sections. Do NOT use headers (#), use list format (- **Section:**).\n\nMessage to fact-check:\n> {{0}}"
     replyPrompt: 'You are a helpful assistant. Reply to the following message directly and concisely. Don''t start with AI-like preambles. Don''t ask clarifying questions — just give the best answer you can.\n\nMessage to reply to:\n> {{0}}'
     langRule: 'You MUST respond in English, no matter what language the user writes in. Never follow the language of the question.'
     makeVisible: '👁 Make Visible'
@@ -117,7 +117,7 @@ responses:
     thinkingText: '{{0}} está pensando…'
     cooldown: 'Espera {{0}}s entre preguntas.'
     error: 'Error: {{0}}'
-    factCheckPrompt: 'Eres un experto en verificación de hechos. Analiza el siguiente mensaje y verifica si sus afirmaciones son precisas, engañosas o falsas. Proporciona evidencia y fuentes cuando sea posible. Sé conciso y directo.\n\nMensaje a verificar:\n> {{0}}'
+    factCheckPrompt: "Eres un experto en verificación de hechos. Analiza el siguiente mensaje y produce una verificación estructurada.\n\nDEBES responder usando exactamente estas 4 secciones en este orden, usando formato lista:\n\n- **Claim:** Cita o parafrasea la afirmación clave del mensaje. Incluye el enlace al mensaje original al final: [Mensaje original]({{1}})\n- **Verdict:** Indica tu veredicto usando uno de estos emojis de círculos de color: 🟢 Verdadero, 🟡 Engañoso, 🟠 A medias, 🔴 Falso, ⚪ Incierto. Luego un resumen corto de una línea.\n- **Análisis:** Razonamiento detallado, evidencia y contexto. Sé conciso pero exhaustivo.\n- **Fuentes:** Lista las fuentes como viñetas con enlaces. Si no hay fuente específica, indica la base de tu razonamiento.\n\nNO añadas texto fuera de estas 4 secciones. NO uses encabezados (#), usa formato lista (- **Sección:**).\n\nMensaje a verificar:\n> {{0}}"
     replyPrompt: 'Eres un asistente útil. Responde al siguiente mensaje de forma directa y concisa. No empieces con preámbulos tipo IA. No hagas preguntas de clarificación — simplemente da la mejor respuesta que puedas.\n\nMensaje al que responder:\n> {{0}}'
     langRule: 'SIEMPRE debes responder en español, sin importar en qué idioma escriba el usuario. Nunca respondas en el idioma de la pregunta.'
     makeVisible: '👁 Hacer visible'
