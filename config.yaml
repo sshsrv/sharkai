@@ -5,7 +5,7 @@ bot:
  shared_daily_limit: 1000
  history_limit: 6
  data_dir: ./data
- accent_color: 0x5865F2
+ accent_color: 0xff5faf
  accent_color_enabled: true
 
 ai:

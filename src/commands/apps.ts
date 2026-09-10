@@ -3,6 +3,7 @@ import {
   ApplicationCommandType,
   MessageContextMenuCommandInteraction,
   ButtonInteraction,
+  InteractionResponseType,
   Routes,
 } from 'discord.js';
 import { randomBytes } from 'node:crypto';
@@ -112,28 +113,28 @@ async function runContextAction(
 }
 
 export async function handleMakeVisible(interaction: ButtonInteraction): Promise<void> {
-  const contentId = interaction.customId.split(':')[1];
-  const data = contentId ? getPendingData(contentId) : undefined;
-  if (!data) {
-    await interaction.reply({ content: '❌ Not available (expired).', ephemeral: true });
-    return;
-  }
+	const contentId = interaction.customId.split(':')[1];
+	const data = contentId ? getPendingData(contentId) : undefined;
+	if (!data) {
+		await interaction.reply({ content: '❌ Not available (expired).', ephemeral: true });
+		return;
+	}
 
-  const content = `${data.text}\n\n${footer(data.emoji, data.modelId, data.used, data.limit)}`;
+	const content = `${data.text}\n\n${footer(data.emoji, data.modelId, data.used, data.limit)}`;
 
-  await interaction.deferReply();
-
-  await interaction.client.rest.post(
-    Routes.webhookMessage(interaction.client.user.id, interaction.token),
-    {
-      body: {
-        content,
-        message_reference: { message_id: data.targetMessageId, fail_if_not_exists: false },
-      },
-    }
-  );
+	await interaction.client.rest.post(
+		Routes.interactionCallback(interaction.id, interaction.token),
+		{
+			body: {
+				type: InteractionResponseType.ChannelMessageWithSource,
+				data: {
+					content,
+					message_reference: { message_id: data.targetMessageId, fail_if_not_exists: false },
+				},
+			},
+		}
+	);
 }
-
 export const factCheckCommand = {
   data: new ContextMenuCommandBuilder()
     .setName('Fact-Check')
