@@ -38,6 +38,7 @@ interface PendingData {
   limit: number;
   targetMessageId: string;
   channelId: string;
+  guildId: string | null;
   promptTemplateKey: string;
   originalPrompt: string;
   lang: Language;
@@ -88,9 +89,10 @@ function visibleComponents(
   modelName: string,
   used: number,
   limit: number,
+  messageUrl: string,
 ): V2Component[] {
   const e = emoji ? `${emoji} ` : '';
-  const footer = `---\n-# ${e}${modelName}\u00b7${used}/${limit} daily\u00b7Results are AI generated`;
+  const footer = `---\n-# [Original message](${messageUrl}) · ${e}${modelName}\u00b7${used}/${limit} daily\u00b7Results are AI generated`;
   return [
     text(`# ${targetContent}`),
     separator(),
@@ -133,19 +135,20 @@ async function runContextAction(
         : result.text;
 
     const contentId = genId();
-    pendingVisibility.set(contentId, {
-      text: answerText,
-      targetContent,
-      modelId: result.model,
-      emoji,
-      used: mu.used,
-      limit: mu.limit,
-      targetMessageId: interaction.targetMessage.id,
-      channelId: interaction.channelId,
-      promptTemplateKey,
-      originalPrompt: fullPrompt,
-      lang,
-    });
+ pendingVisibility.set(contentId, {
+ text: answerText,
+ targetContent,
+ modelId: result.model,
+ emoji,
+ used: mu.used,
+ limit: mu.limit,
+ targetMessageId: interaction.targetMessage.id,
+ channelId: interaction.channelId,
+ guildId: interaction.guildId,
+ promptTemplateKey,
+ originalPrompt: fullPrompt,
+ lang,
+ });
 
     await editComponents(
       interaction,
@@ -166,6 +169,8 @@ export async function handleMakeVisible(interaction: ButtonInteraction): Promise
   }
 
   const resultModel = MODELS[data.modelId];
+  const guildPart = data.guildId ?? '@me';
+  const messageUrl = `https://discord.com/channels/${guildPart}/${data.channelId}/${data.targetMessageId}`;
 
   await interaction.deferReply({ ephemeral: true });
 
@@ -177,10 +182,11 @@ export async function handleMakeVisible(interaction: ButtonInteraction): Promise
       resultModel?.name ?? data.modelId,
       data.used,
       data.limit,
+      messageUrl,
     );
 
     await interaction.client.rest.post(
-      Routes.channelMessages(data.channelId),
+      Routes.webhook(interaction.client.user.id, interaction.token),
       {
         body: {
           flags: IS_COMPONENTS_V2,
@@ -258,19 +264,20 @@ export async function handleContextModal(interaction: ModalSubmitInteraction): P
         : result.text;
 
     const newContentId = genId();
-    pendingVisibility.set(newContentId, {
-      text: answerText,
-      targetContent: data.targetContent,
-      modelId: result.model,
-      emoji,
-      used: mu.used,
-      limit: mu.limit,
-      targetMessageId: data.targetMessageId,
-      channelId: data.channelId,
-      promptTemplateKey: data.promptTemplateKey,
-      originalPrompt: newPrompt,
-      lang,
-    });
+ pendingVisibility.set(newContentId, {
+ text: answerText,
+ targetContent: data.targetContent,
+ modelId: result.model,
+ emoji,
+ used: mu.used,
+ limit: mu.limit,
+ targetMessageId: data.targetMessageId,
+ channelId: data.channelId,
+ guildId: data.guildId,
+ promptTemplateKey: data.promptTemplateKey,
+ originalPrompt: newPrompt,
+ lang,
+ });
 
     await interaction.editReply({
       flags: IS_COMPONENTS_V2,
