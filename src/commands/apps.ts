@@ -24,10 +24,8 @@ import {
   editComponents,
   text,
   separator,
-  heading,
   button,
   actionRow,
-  box,
   type V2Component,
 } from '../components.js';
 import type { Language } from '../config.js';
@@ -69,6 +67,7 @@ function thinkingComponents(lang: Language, emoji: string, name: string): V2Comp
 
 function resultComponents(
  lang: Language,
+ promptTemplateKey: string,
  targetContent: string,
  answerText: string,
  contentId: string,
@@ -78,8 +77,10 @@ function resultComponents(
  used: number,
  limit: number,
 ): V2Component[] {
- return [box([
+ const label = promptTemplateKey === 'factCheckPrompt' ? t(lang, 'factCheckLabel') : t(lang, 'replyLabel');
+ return [
  text(`# [${targetContent}](${messageUrl})`),
+ text(`-# ${label}`),
  separator(),
  text(answerText),
  separator(),
@@ -87,7 +88,8 @@ function resultComponents(
  actionRow(
  button(t(lang, 'addContext'), `add_context:${contentId}`, 2),
  button(t(lang, 'makeVisible'), `make_visible:${contentId}`, 2),
- )])];
+ ),
+ ];
 }
 
 function visibleComponents(
@@ -103,8 +105,8 @@ function visibleComponents(
 ): V2Component[] {
  const label = promptTemplateKey === 'factCheckPrompt' ? t(lang, 'factCheckLabel') : t(lang, 'replyLabel');
  return [
- heading(t(lang, 'contextResult', label), 2),
- text(`[${targetContent}](${messageUrl})`),
+ text(`# [${targetContent}](${messageUrl})`),
+ text(`-# ${label}`),
  separator(),
  text(answerText),
  separator(),
@@ -166,7 +168,7 @@ const contentId = genId();
 
  await editComponents(
  interaction,
- resultComponents(lang, targetContent, answerText, contentId, messageUrl, emoji, result.model, mu.used, mu.limit),
+ resultComponents(lang, promptTemplateKey, targetContent, answerText, contentId, messageUrl, emoji, result.model, mu.used, mu.limit),
  );
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
@@ -281,7 +283,7 @@ export async function handleContextModal(interaction: ModalSubmitInteraction): P
     const guildPart = data.guildId ?? '@me';
     const messageUrl = `https://discord.com/channels/${guildPart}/${data.channelId}/${data.targetMessageId}`;
 
-    await editComponents(interaction, resultComponents(lang, data.targetContent, answerText, newContentId, messageUrl, emoji, result.model, mu.used, mu.limit));
+    await editComponents(interaction, resultComponents(lang, data.promptTemplateKey, data.targetContent, answerText, newContentId, messageUrl, emoji, result.model, mu.used, mu.limit));
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     await editComponents(interaction, [text(t(lang, 'error', message))]);
