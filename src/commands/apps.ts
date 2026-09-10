@@ -22,7 +22,6 @@ import {
   editComponents,
   text,
   separator,
-  section,
   button,
   actionRow,
   IS_COMPONENTS_V2,
@@ -61,7 +60,7 @@ function defaultPrompt(lang: Language): string {
 }
 
 function thinkingComponents(lang: Language, emoji: string, name: string): V2Component[] {
-  return [section([text(t(lang, 'contextThinking', `${emoji} ${name}`))])];
+  return [text(t(lang, 'contextThinking', `${emoji} ${name}`))];
 }
 
 function resultComponents(
@@ -71,9 +70,9 @@ function resultComponents(
   contentId: string,
 ): V2Component[] {
   return [
-    section([text(`# ${targetContent}`)]),
+    text(`# ${targetContent}`),
     separator(),
-    section([text(answerText)]),
+    text(answerText),
     separator(),
     actionRow(
       button(t(lang, 'addContext'), `add_context:${contentId}`, 2),
@@ -93,9 +92,9 @@ function visibleComponents(
   const e = emoji ? `${emoji} ` : '';
   const footer = `---\n-# ${e}${modelName}\u00b7${used}/${limit} daily\u00b7Results are AI generated`;
   return [
-    section([text(`# ${targetContent}`)]),
+    text(`# ${targetContent}`),
     separator(),
-    section([text(`${answerText}\n\n${footer}`)]),
+    text(`${answerText}\n\n${footer}`),
   ];
 }
 
@@ -154,7 +153,7 @@ async function runContextAction(
     );
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    await editComponents(interaction, [section([text(t(lang, 'error', message))])]);
+    await editComponents(interaction, [text(t(lang, 'error', message))]);
   }
 }
 
@@ -281,7 +280,7 @@ export async function handleContextModal(interaction: ModalSubmitInteraction): P
     const message = err instanceof Error ? err.message : String(err);
     await interaction.editReply({
       flags: IS_COMPONENTS_V2,
-      components: [section([text(t(lang, 'error', message))])],
+      components: [text(t(lang, 'error', message))],
     });
   }
 }
