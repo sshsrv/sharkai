@@ -20,13 +20,13 @@ import { recordRequest, getModelUsage } from '../usage.js';
 import { footer, modelEmoji } from './ai.js';
 import {
   replyComponents,
+  deferComponents,
   editComponents,
   text,
   separator,
   button,
   actionRow,
   box,
-  IS_COMPONENTS_V2,
   type V2Component,
 } from '../components.js';
 import type { Language } from '../config.js';
@@ -172,7 +172,7 @@ export async function handleMakeVisible(interaction: ButtonInteraction): Promise
  const contentId = interaction.customId.split(':')[1];
  const data = contentId ? getPendingData(contentId) : undefined;
  if (!data) {
- await interaction.reply({ content: 'Not available (expired).', ephemeral: true });
+ await replyComponents(interaction, [text('Not available (expired).')], { ephemeral: true });
  return;
  }
 
@@ -192,7 +192,7 @@ export async function handleMakeVisible(interaction: ButtonInteraction): Promise
 
  await replyComponents(interaction, components);
  } catch {
- await interaction.reply({ content: 'Could not send message (missing permissions?).', ephemeral: true });
+ await replyComponents(interaction, [text('Could not send message (missing permissions?).')], { ephemeral: true });
  }
 }
 
@@ -200,7 +200,7 @@ export function showAddContextModal(interaction: ButtonInteraction): void {
   const contentId = interaction.customId.split(':')[1];
   const data = contentId ? getPendingData(contentId) : undefined;
   if (!data) {
-    interaction.reply({ content: 'Context expired.', ephemeral: true });
+    replyComponents(interaction, [text('Context expired.')], { ephemeral: true });
     return;
   }
 
@@ -228,7 +228,7 @@ export async function handleContextModal(interaction: ModalSubmitInteraction): P
   const contentId = interaction.customId.split(':')[1];
   const data = contentId ? getPendingData(contentId) : undefined;
   if (!data) {
-    await interaction.reply({ content: 'Context expired.', ephemeral: true });
+    await replyComponents(interaction, [text('Context expired.')], { ephemeral: true });
     return;
   }
 
@@ -239,7 +239,7 @@ export async function handleContextModal(interaction: ModalSubmitInteraction): P
 
   const newPrompt = `${data.originalPrompt}\n\nAdditional context from user:\n${additionalContext}`;
 
-  await interaction.deferReply({ ephemeral: true });
+  await deferComponents(interaction, { ephemeral: true });
 
   try {
     const result = await ask(newPrompt, model.id, interaction.user.id);
@@ -273,16 +273,10 @@ export async function handleContextModal(interaction: ModalSubmitInteraction): P
     const guildPart = data.guildId ?? '@me';
     const messageUrl = `https://discord.com/channels/${guildPart}/${data.channelId}/${data.targetMessageId}`;
 
-    await interaction.editReply({
-      flags: IS_COMPONENTS_V2,
-      components: resultComponents(lang, data.targetContent, answerText, newContentId, messageUrl, emoji, result.model, mu.used, mu.limit),
-    });
+    await editComponents(interaction, resultComponents(lang, data.targetContent, answerText, newContentId, messageUrl, emoji, result.model, mu.used, mu.limit));
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    await interaction.editReply({
-      flags: IS_COMPONENTS_V2,
-      components: [text(t(lang, 'error', message))],
-    });
+    await editComponents(interaction, [text(t(lang, 'error', message))]);
   }
 }
 

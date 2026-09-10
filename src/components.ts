@@ -64,7 +64,7 @@ export async function replyComponents(
 }
 
 export async function deferComponents(
- interaction: ChatInputCommandInteraction,
+ interaction: AnyInteraction,
  opts: { ephemeral?: boolean } = {}
 ): Promise<void> {
  await interaction.client.rest.post(
