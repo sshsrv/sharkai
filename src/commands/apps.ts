@@ -77,10 +77,10 @@ function resultComponents(
  used: number,
  limit: number,
 ): V2Component[] {
- const label = promptTemplateKey === 'factCheckPrompt' ? t(lang, 'factCheckLabel') : t(lang, 'replyLabel');
+ const label = promptTemplateKey === 'factCheckPrompt' ? t(lang, 'factCheckLabel') : '';
  return [
  text(`# [${targetContent}](${messageUrl})`),
- text(`-# ${label}`),
+ ...(label ? [text(`-# ${label}`)] : []),
  separator(),
  text(answerText),
  separator(),
@@ -103,10 +103,10 @@ function visibleComponents(
  limit: number,
  messageUrl: string,
 ): V2Component[] {
- const label = promptTemplateKey === 'factCheckPrompt' ? t(lang, 'factCheckLabel') : t(lang, 'replyLabel');
+ const label = promptTemplateKey === 'factCheckPrompt' ? t(lang, 'factCheckLabel') : '';
  return [
  text(`# [${targetContent}](${messageUrl})`),
- text(`-# ${label}`),
+ ...(label ? [text(`-# ${label}`)] : []),
  separator(),
  text(answerText),
  separator(),
