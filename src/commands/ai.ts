@@ -156,7 +156,7 @@ export const shCommand = {
 				),
 		)
 		.addSubcommand((s) => s.setName('usage').setDescription('Show your shared usage and live limits'))
-		.addSubcommand((s) => s.setName('new').setDescription('Start a new conversation (clears context)'))
+		.addSubcommand((s) => s.setName('clear').setDescription('Clear your conversation history (start fresh context)'))
 		.addSubcommand((s) => s.setName('status').setDescription('Show your current configuration'))
 		.addSubcommand((s) => s.setName('reset').setDescription('Reset all your settings to defaults')),
 
@@ -178,8 +178,8 @@ export const shCommand = {
 			case 'usage':
 				await handleUsage(interaction);
 				break;
-			case 'new':
-				await handleNew(interaction);
+			case 'clear':
+				await handleClear(interaction);
 				break;
 			case 'status':
 				await handleStatus(interaction);
@@ -421,10 +421,10 @@ async function handleUsage(interaction: ChatInputCommandInteraction): Promise<vo
 	}
 }
 
-async function handleNew(interaction: ChatInputCommandInteraction): Promise<void> {
+async function handleClear(interaction: ChatInputCommandInteraction): Promise<void> {
 	const lang = getLanguage(interaction.user.id);
 	clearHistory(interaction.user.id);
-	await replyComponents(interaction, [box([boxTitle(t(lang, 'h1New'))])], { ephemeral: true });
+	await replyComponents(interaction, [box([boxTitle(t(lang, 'h1Clear'))])], { ephemeral: true });
 }
 
 async function handleStatus(interaction: ChatInputCommandInteraction): Promise<void> {
