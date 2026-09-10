@@ -1,6 +1,8 @@
 import {
   ContextMenuCommandBuilder,
   ApplicationCommandType,
+  ApplicationIntegrationType,
+  InteractionContextType,
   ButtonInteraction,
   ModalSubmitInteraction,
   ModalBuilder,
@@ -295,12 +297,16 @@ export async function handleContextModal(interaction: ModalSubmitInteraction): P
 }
 
 export const factCheckCommand = new ContextMenuCommandBuilder()
-  .setName('Fact-Check')
-  .setType(ApplicationCommandType.Message);
+ .setName('Fact-Check')
+ .setType(ApplicationCommandType.Message)
+ .setIntegrationTypes([ApplicationIntegrationType.UserInstall])
+ .setContexts([InteractionContextType.BotDM, InteractionContextType.PrivateChannel]);
 
 export const replyMessageCommand = new ContextMenuCommandBuilder()
-  .setName('Reply')
-  .setType(ApplicationCommandType.Message);
+ .setName('Reply')
+ .setType(ApplicationCommandType.Message)
+ .setIntegrationTypes([ApplicationIntegrationType.UserInstall])
+ .setContexts([InteractionContextType.BotDM, InteractionContextType.PrivateChannel]);
 
 export async function handleFactCheck(interaction: MessageContextMenuCommandInteraction): Promise<void> {
   await runContextAction(interaction, 'factCheckPrompt');
