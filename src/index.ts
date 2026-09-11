@@ -7,6 +7,10 @@ import {
   handleFactCheck,
   handleReplyMessage,
   handleMakeVisible,
+  handleCopy,
+  handleRegen,
+  showAskModal,
+  handleAskModal,
   showAddContextModal,
   handleContextModal,
 } from './commands/apps.js';
@@ -68,8 +72,24 @@ client.on(Events.InteractionCreate, async (interaction) => {
  await showAddContextModal(interaction);
  return;
  }
+ if (interaction.isButton() && interaction.customId.startsWith('ask:')) {
+ await showAskModal(interaction);
+ return;
+ }
+ if (interaction.isButton() && interaction.customId.startsWith('copy:')) {
+ await handleCopy(interaction);
+ return;
+ }
+ if (interaction.isButton() && interaction.customId.startsWith('regen:')) {
+ await handleRegen(interaction);
+ return;
+ }
  if (interaction.isModalSubmit() && interaction.customId.startsWith('context_modal:')) {
  await handleContextModal(interaction);
+ return;
+ }
+ if (interaction.isModalSubmit() && interaction.customId.startsWith('ask_modal:')) {
+ await handleAskModal(interaction);
  return;
  }
 });

@@ -76,6 +76,16 @@ export async function deferComponents(
  );
 }
 
+export async function deferUpdate(interaction: AnyInteraction): Promise<void> {
+await interaction.client.rest.post(
+Routes.interactionCallback(interaction.id, interaction.token),
+{
+body: {
+type: InteractionResponseType.DeferredMessageUpdate,
+data: {} }}
+);
+}
+
 export async function editComponents(
  interaction: AnyInteraction,
  components: V2Component[]

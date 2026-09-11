@@ -41,6 +41,8 @@ import {
 	heading,
 	box,
 } from '../components.js';
+import { genId, getPendingData, setPendingData } from '../pending.js';
+import { renderComponents, cleanAnswer } from '../render.js';
 
 
 
@@ -239,13 +241,30 @@ async function handleAsk(interaction: ChatInputCommandInteraction): Promise<void
 				? `${result.text.slice(0, answerMax - 1)}${t(lang, 'answerTruncated')}`
 				: result.text;
 
-		const components: V2Component[] = [
-			text(answerText),
-			separator(),
-			text(footer(emoji, model, mu.used, mu.limit)),
-		];
+		const contentId = genId();
+		setPendingData(contentId, {
+			kind: 'ask',
+			text: answerText,
+			targetContent: question,
+			modelId: model,
+			emoji,
+			used: mu.used,
+			limit: mu.limit,
+			targetMessageId: null,
+			channelId: interaction.channelId,
+			guildId: interaction.guildId,
+			promptTemplateKey: 'ask',
+			originalPrompt: question,
+			lang,
+			authorId: interaction.user.id,
+			visible,
+			createdAt: Date.now(),
+		});
 
-		await editComponents(interaction, components);
+		const pending = getPendingData(contentId);
+		if (pending) {
+			await editComponents(interaction, renderComponents(pending, contentId, visible));
+		}
 	} catch (err) {
 		const message = err instanceof Error ? err.message : String(err);
 		await editComponents(interaction, [text(t(lang, 'error', message))]);

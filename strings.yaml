@@ -117,6 +117,10 @@ responses:
     usageShared: "Shared across all models (same API quota)"
     usageTitle: 'Usage'
     usageTokensTag: 'TPM'
+    askButton: '💬 Ask'
+    copyButton: '📋 Copy'
+    regenButton: '🔄 Regen'
+    notAuthor: 'Only the author can use this button.'
   es:
     answerTruncated: '…'
     thinkingText: '{{0}} está pensando…'
@@ -161,3 +165,7 @@ responses:
     usageShared: "Compartido entre todos los modelos (misma cuota de API)"
     usageTitle: 'Uso'
     usageTokensTag: 'TPM'
+    askButton: '💬 Preguntar'
+    copyButton: '📋 Copiar'
+    regenButton: '🔄 Regenerar'
+    notAuthor: 'Solo el autor puede usar este botón.'
