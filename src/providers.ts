@@ -8,6 +8,7 @@ const GROQ_ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions';
 const GOOGLE_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models';
 const OPENROUTER_ENDPOINT = 'https://openrouter.ai/api/v1/chat/completions';
 const MISTRAL_ENDPOINT = 'https://api.mistral.ai/v1/chat/completions';
+const OPENCODE_ENDPOINT = 'https://opencode.ai/zen/v1/chat/completions';
 
 
 export interface RateLimits {
@@ -157,6 +158,14 @@ async function mistralComplete(
 	return openAIComplete(MISTRAL_ENDPOINT, env.mistralApiKey, model, messages, maxTokens);
 }
 
+async function opencodeComplete(
+	model: string,
+	messages: ChatMessage[],
+	maxTokens: number,
+): Promise<{ data: OpenAIResponse; headers: Headers }> {
+	return openAIComplete(OPENCODE_ENDPOINT, env.opencodeApiKey, model, messages, maxTokens);
+}
+
 function extractOpenAIResult(data: OpenAIResponse, provider: Provider): { text: string; usage: AskResult['usage'] } {
 	return {
 		text: data.choices?.[0]?.message?.content?.trim() ?? '*(no response)*',
@@ -291,6 +300,7 @@ function requireApiKey(provider: Provider, envKey: string): void {
 		google: env.googleApiKey,
 		openrouter: env.openrouterApiKey,
 		mistral: env.mistralApiKey,
+		opencode: env.opencodeApiKey,
 	};
 	if (!keyMap[provider]) {
 		throw new Error(`${envKey} no configurada. Añádela al .env para usar modelos de ${provider}.`);
@@ -326,6 +336,13 @@ export async function ask(question: string, overrideModel: string | null, userId
 		const { data } = await mistralComplete(model, messages, AI_MAX_TOKENS);
 		const r = extractOpenAIResult(data, 'mistral');
 		return { text: r.text, model, provider: 'mistral', usage: r.usage };
+	}
+
+	if (m.provider === 'opencode') {
+		requireApiKey('opencode', 'OPENCODE_API_KEY');
+		const { data } = await opencodeComplete(model, messages, AI_MAX_TOKENS);
+		const r = extractOpenAIResult(data, 'opencode');
+		return { text: r.text, model, provider: 'opencode', usage: r.usage };
 	}
 
 	const { data } = await groqComplete(model, messages, AI_MAX_TOKENS);

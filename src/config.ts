@@ -11,6 +11,7 @@ const fallbackProviders: Record<Provider, string> = {
   google: 'Google',
   openrouter: 'OpenRouter',
   mistral: 'Mistral',
+  opencode: 'OpenCode',
 };
 
 export const PROVIDER_LABEL: Record<Provider, string> = raw
@@ -69,6 +70,7 @@ export const env = {
   googleApiKey: process.env.GOOGLE_API_KEY ?? '',
   openrouterApiKey: process.env.OPENROUTER_API_KEY ?? '',
   mistralApiKey: process.env.MISTRAL_API_KEY ?? '',
+  opencodeApiKey: process.env.OPENCODE_API_KEY ?? '',
 };
 
 export function formatLimits(m: AIModel): string {

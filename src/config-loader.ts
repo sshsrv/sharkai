@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as yaml from 'yaml';
 
-export type Provider = 'groq' | 'google' | 'openrouter' | 'mistral';
+export type Provider = 'groq' | 'google' | 'openrouter' | 'mistral' | 'opencode';
 
 export interface AIModel {
   id: string;

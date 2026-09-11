@@ -32,6 +32,9 @@ if (!env.openrouterApiKey) {
 if (!env.mistralApiKey) {
   console.warn('⚠️ MISTRAL_API_KEY no configurada — los modelos de Mistral no funcionarán');
 }
+if (!env.opencodeApiKey) {
+  console.warn('⚠️ OPENCODE_API_KEY no configurada — los modelos de OpenCode no funcionarán');
+}
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.DirectMessages],

@@ -9,9 +9,12 @@ services:
     restart: unless-stopped
     environment:
       - DISCORD_TOKEN=${DISCORD_TOKEN:?Falta DISCORD_TOKEN en el .env}
-- GROQ_API_KEY=${GROQ_API_KEY:?Falta GROQ_API_KEY en el .env}
- - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
- - GIT_REPO=${GIT_REPO:-https://github.com/sshsrv/sharkai.git}
+      - GROQ_API_KEY=${GROQ_API_KEY:?Falta GROQ_API_KEY en el .env}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
+      - MISTRAL_API_KEY=${MISTRAL_API_KEY:-}
+      - OPENCODE_API_KEY=${OPENCODE_API_KEY:-}
+      - GIT_REPO=${GIT_REPO:-https://github.com/sshsrv/sharkai.git}
       - GIT_BRANCH=${GIT_BRANCH:-main}
       - POLL_SECONDS=${POLL_SECONDS:-60}
       - DATA_DIR=/app/data

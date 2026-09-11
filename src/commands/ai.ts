@@ -413,7 +413,6 @@ async function handleUsage(interaction: ChatInputCommandInteraction): Promise<vo
 		const grouped = new Map<string, Array<{ id: string; used: number; limit: number }>>();
 		for (const id of CHAT_MODEL_IDS) {
 			const mu = getModelUsage(id);
-			if (mu.limit === 0) continue;
 			const provider = MODELS[id].provider;
 			const list = grouped.get(provider) ?? [];
 			list.push({ id, used: mu.used, limit: mu.limit });
@@ -425,6 +424,7 @@ async function handleUsage(interaction: ChatInputCommandInteraction): Promise<vo
 			google: '<:google:1547015367174397952>',
 			openrouter: '<:openrouter:1547913422551916606>',
 			mistral: '<:mistral:1547911139063496775>',
+			opencode: '<:opencode:1547987872844484618>',
 		};
 
 		const providerOrder: Array<{ key: string; label: string }> = [
@@ -432,6 +432,7 @@ async function handleUsage(interaction: ChatInputCommandInteraction): Promise<vo
 			{ key: 'google', label: PROVIDER_LABEL['google'] ?? 'Google' },
 			{ key: 'openrouter', label: PROVIDER_LABEL['openrouter'] ?? 'OpenRouter' },
 			{ key: 'mistral', label: PROVIDER_LABEL['mistral'] ?? 'Mistral' },
+			{ key: 'opencode', label: PROVIDER_LABEL['opencode'] ?? 'OpenCode' },
 		];
 
 		const inner: V2Component[] = [
@@ -444,11 +445,19 @@ async function handleUsage(interaction: ChatInputCommandInteraction): Promise<vo
 			const models = grouped.get(key);
 			if (!models || models.length === 0) continue;
 
+			const sorted = [...models].sort((a, b) => {
+				if (a.limit === 0 && b.limit === 0) return 0;
+				if (a.limit === 0) return 1;
+				if (b.limit === 0) return -1;
+				return b.used - a.used;
+			});
+
 			const pEmoji = providerEmoji[key] ?? '';
-			const modelLines = models.map(m => {
+			const modelLines = sorted.map(m => {
 				const e = modelEmoji(m.id);
 				const pfx = e ? `${e} ` : '';
-				return `- ${pfx}${MODELS[m.id].name}: \`${m.used}/${m.limit}\``;
+				const usage = m.limit === 0 ? '∞/∞' : `${m.used}/${m.limit}`;
+				return `- ${pfx}${MODELS[m.id].name}: \`${usage}\``;
 			}).join('\n');
 
 			inner.push(separator());

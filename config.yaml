@@ -31,6 +31,10 @@ providers:
     label: Mistral
     endpoint: https://api.mistral.ai/v1/chat/completions
     api_key_env: MISTRAL_API_KEY
+  opencode:
+    label: OpenCode
+    endpoint: https://opencode.ai/zen/v1/chat/completions
+    api_key_env: OPENCODE_API_KEY
 
 models:
   openai/gpt-oss-120b:
@@ -438,6 +442,60 @@ models:
     rpd: 1000
     context: 128000
     multimodal: false
+  muse-spark-1.3-free:
+    name: Muse Spark 1.3 Free
+    provider: opencode
+    description: "Meta Muse Spark 1.3 via OpenCode. Free tier."
+    tpm: 200000
+    rpm: 20
+    rpd: 0
+    context: 131072
+    multimodal: false
+  ling-3.0-flash-fin-free:
+    name: Ling 3.0 Flash Fin Free
+    provider: opencode
+    description: "inclusionAI Ling 3.0 Flash Fin via OpenCode. Finance focused."
+    tpm: 200000
+    rpm: 20
+    rpd: 0
+    context: 262144
+    multimodal: false
+  nemotron-3.5-lightning-free:
+    name: Nemotron 3.5 Lightning Free
+    provider: opencode
+    description: "NVIDIA Nemotron 3.5 Lightning via OpenCode. Fast 30B MoE."
+    tpm: 200000
+    rpm: 20
+    rpd: 0
+    context: 131072
+    multimodal: false
+  muse-spark-1.2-free:
+    name: Muse Spark 1.2 Free
+    provider: opencode
+    description: "Meta Muse Spark 1.2 via OpenCode. Free tier."
+    tpm: 200000
+    rpm: 20
+    rpd: 0
+    context: 131072
+    multimodal: false
+  nemotron-3-ultra-free:
+    name: Nemotron 3 Ultra Free
+    provider: opencode
+    description: "NVIDIA Nemotron 3 Ultra via OpenCode. 550B MoE."
+    tpm: 200000
+    rpm: 20
+    rpd: 0
+    context: 131072
+    multimodal: false
+  mimo-v2.5-free:
+    name: MiMo V2.5 Free
+    provider: opencode
+    description: "Xiaomi MiMo V2.5 via OpenCode. Free tier."
+    tpm: 200000
+    rpm: 20
+    rpd: 0
+    context: 131072
+    multimodal: false
 
 model_emojis:
   openai/gpt-oss-120b: <:openai:1547015408110800967>
@@ -485,3 +543,9 @@ model_emojis:
   ministral-8b-2512: <:mistral:1547911139063496775>
   ministral-3b-2512: <:mistral:1547911139063496775>
   codestral-2508: <:mistral:1547911139063496775>
+  muse-spark-1.3-free: <:meta:1547988455106158653>
+  ling-3.0-flash-fin-free: <:opencode:1547987872844484618>
+  nemotron-3.5-lightning-free: <:opencode:1547987872844484618>
+  muse-spark-1.2-free: <:meta:1547988455106158653>
+  nemotron-3-ultra-free: <:opencode:1547987872844484618>
+  mimo-v2.5-free: <:xiaomi:1547990136363552989>
