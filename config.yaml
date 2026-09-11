@@ -316,24 +316,6 @@ models:
     rpd: 200
     context: 65536
     multimodal: false
-  thinkingmachines/inkling:free:
-    name: Inkling
-    provider: openrouter
-    description: "Thinking Machines Inkling. 975B MoE, general-purpose multimodal reasoning."
-    tpm: 260000
-    rpm: 20
-    rpd: 200
-    context: 1048576
-    multimodal: true
-  thinkingmachines/inkling-small:free:
-    name: Inkling Small
-    provider: openrouter
-    description: "Thinking Machines Inkling Small. 276B MoE, efficient multimodal reasoning."
-    tpm: 260000
-    rpm: 20
-    rpd: 200
-    context: 1048576
-    multimodal: true
   dots-studio/dots-3-note-preview:free:
     name: Dots3-Note Preview
     provider: openrouter
@@ -529,8 +511,6 @@ model_emojis:
   poolside/laguna-xs-2.1:free: <:openrouter:1547913422551916606>
   cohere/north-mini-code:free: <:openrouter:1547913422551916606>
   liquid/lfm-2.5-2.6b:free: <:openrouter:1547913422551916606>
-  thinkingmachines/inkling:free: <:openrouter:1547913422551916606>
-  thinkingmachines/inkling-small:free: <:openrouter:1547913422551916606>
   dots-studio/dots-3-note-preview:free: <:openrouter:1547913422551916606>
   nex-agi/nex-n2.5-mini:free: <:openrouter:1547913422551916606>
   nex-agi/nex-n2.5-pro:free: <:openrouter:1547913422551916606>
