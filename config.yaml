@@ -440,9 +440,9 @@ model_emojis:
   gemini-3.8-flash: <:google:1547015367174397952>
   gemma-4-31b-it: <:google:1547015367174397952>
   gemma-4-26b-a4b-it: <:google:1547015367174397952>
-  meta-llama/llama-4-maverick:free: <:openai:1547015408110800967>
-  deepseek/deepseek-v3:free: <:openai:1547015408110800967>
-  mistral-small-latest: <:groq:1547015390939320320>
+  meta-llama/llama-4-maverick:free: <:openrouter:1547913422551916606>
+  deepseek/deepseek-v3:free: <:deepseek:1547911085682855957>
+  mistral-small-latest: <:mistral:1547911139063496775>
   gemini-2.5-pro: <:google:1547015367174397952>
   nvidia/nemotron-3-ultra-550b-a55b:free: <:nvidia:1547912276064079983>
   nvidia/nemotron-3.5-lightning:free: <:nvidia:1547912276064079983>
