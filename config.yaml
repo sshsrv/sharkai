@@ -23,6 +23,14 @@ providers:
     label: Google
     endpoint: https://generativelanguage.googleapis.com/v1beta/models
     api_key_env: GOOGLE_API_KEY
+  openrouter:
+    label: OpenRouter
+    endpoint: https://openrouter.ai/api/v1/chat/completions
+    api_key_env: OPENROUTER_API_KEY
+  mistral:
+    label: Mistral
+    endpoint: https://api.mistral.ai/v1/chat/completions
+    api_key_env: MISTRAL_API_KEY
 
 models:
   openai/gpt-oss-120b:
@@ -169,6 +177,51 @@ models:
     rpd: 20
     context: 1048576
     multimodal: true
+  gemma-4-31b-it:
+    name: Gemma 4 31B
+    provider: google
+    description: "Google Gemma 4 31B Dense. High-quality open model, completely free."
+    tpm: 16000
+    rpm: 30
+    rpd: 14400
+    context: 262144
+    multimodal: true
+  gemma-4-26b-a4b-it:
+    name: Gemma 4 26B A4B
+    provider: google
+    description: "Google Gemma 4 26B A4B MoE. Efficient open model, completely free."
+    tpm: 16000
+    rpm: 30
+    rpd: 14400
+    context: 262144
+    multimodal: true
+  meta-llama/llama-4-maverick:free:
+    name: Llama 4 Maverick (Free)
+    provider: openrouter
+    description: "Meta Llama 4 Maverick via OpenRouter. Free tier, powerful multi-modal model."
+    tpm: 260000
+    rpm: 20
+    rpd: 50
+    context: 131072
+    multimodal: true
+  deepseek/deepseek-v3:free:
+    name: DeepSeek V3 (Free)
+    provider: openrouter
+    description: "DeepSeek V3 via OpenRouter. Free tier, excellent reasoning."
+    tpm: 260000
+    rpm: 20
+    rpd: 50
+    context: 131072
+    multimodal: false
+  mistral-small-latest:
+    name: Mistral Small
+    provider: mistral
+    description: "Mistral Small. Fast, efficient model with generous free tier."
+    tpm: 500000
+    rpm: 30
+    rpd: 1000
+    context: 131072
+    multimodal: false
 
 model_emojis:
   openai/gpt-oss-120b: <:openai:1547015408110800967>
@@ -187,3 +240,8 @@ model_emojis:
   gemini-3.6-flash: <:google:1547015367174397952>
   gemini-3.7-flash: <:google:1547015367174397952>
   gemini-3.8-flash: <:google:1547015367174397952>
+  gemma-4-31b-it: <:google:1547015367174397952>
+  gemma-4-26b-a4b-it: <:google:1547015367174397952>
+  meta-llama/llama-4-maverick:free: <:openai:1547015408110800967>
+  deepseek/deepseek-v3:free: <:openai:1547015408110800967>
+  mistral-small-latest: <:groq:1547015390939320320>

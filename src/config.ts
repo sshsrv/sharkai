@@ -6,7 +6,12 @@ export type { Provider, AIModel, Language };
 const raw: AppConfig | null = loadConfig();
 
 const fallbackModels: Record<string, AIModel> = {};
-const fallbackProviders: Record<Provider, string> = { groq: 'Groq', google: 'Google' };
+const fallbackProviders: Record<Provider, string> = {
+  groq: 'Groq',
+  google: 'Google',
+  openrouter: 'OpenRouter',
+  mistral: 'Mistral',
+};
 
 export const PROVIDER_LABEL: Record<Provider, string> = raw
   ? (Object.fromEntries(
@@ -62,6 +67,8 @@ export const env = {
   discordToken: process.env.DISCORD_TOKEN ?? '',
   groqApiKey: process.env.GROQ_API_KEY ?? '',
   googleApiKey: process.env.GOOGLE_API_KEY ?? '',
+  openrouterApiKey: process.env.OPENROUTER_API_KEY ?? '',
+  mistralApiKey: process.env.MISTRAL_API_KEY ?? '',
 };
 
 export function formatLimits(m: AIModel): string {

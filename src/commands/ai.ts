@@ -283,8 +283,10 @@ async function modelInfoText(m: AIModel): Promise<string> {
 				`\`${fmtK(live.remainingTokens)}/${fmtK(live.limitTokens)}\` TPM` +
 				(live.resetRequests ? ` · reset ${live.resetRequests}` : '');
 		}
-	} else {
+	} else if (m.provider === 'google') {
 		info += '\nLimits from Google free-tier (published quota; captured live from API on 429).';
+	} else {
+		info += `\nLimits from ${PROVIDER_LABEL[m.provider] ?? m.provider} free tier.`;
 	}
 	return info;
 }

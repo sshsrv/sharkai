@@ -26,6 +26,12 @@ if (!env.groqApiKey) {
 if (!env.googleApiKey) {
   console.warn('⚠️ GOOGLE_API_KEY no configurada — los modelos de Google fallarán hasta añadirla al .env');
 }
+if (!env.openrouterApiKey) {
+  console.warn('⚠️ OPENROUTER_API_KEY no configurada — los modelos de OpenRouter no funcionarán');
+}
+if (!env.mistralApiKey) {
+  console.warn('⚠️ MISTRAL_API_KEY no configurada — los modelos de Mistral no funcionarán');
+}
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.DirectMessages],

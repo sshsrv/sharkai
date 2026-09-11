@@ -6,12 +6,14 @@ import { t } from './strings.js';
 
 const GROQ_ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions';
 const GOOGLE_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models';
+const OPENROUTER_ENDPOINT = 'https://openrouter.ai/api/v1/chat/completions';
+const MISTRAL_ENDPOINT = 'https://api.mistral.ai/v1/chat/completions';
 
 
 export interface RateLimits {
 	remainingRequests: number | null;
 	limitRequests: number | null;
-	
+
 	resetRequests: string | null;
 	remainingTokens: number | null;
 	limitTokens: number | null;
@@ -98,35 +100,72 @@ function readRateLimits(headers: Headers): RateLimits {
 	};
 }
 
-interface GroqResponse {
+interface OpenAIResponse {
 	choices?: Array<{ message?: { content?: string | null } }>;
 	usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number };
 	error?: { message?: string };
+}
+
+async function openAIComplete(
+	endpoint: string,
+	apiKey: string,
+	model: string,
+	messages: ChatMessage[],
+	maxTokens: number,
+): Promise<{ data: OpenAIResponse; headers: Headers }> {
+	const res = await fetch(endpoint, {
+		method: 'POST',
+		headers: {
+			'content-type': 'application/json',
+			authorization: `Bearer ${apiKey}`,
+		},
+		body: JSON.stringify({ model, messages, temperature: AI_TEMPERATURE, max_tokens: maxTokens }),
+	});
+
+	const data = (await res.json()) as OpenAIResponse;
+
+	if (!res.ok || data.error) {
+		throw new Error(data.error?.message ?? `HTTP ${res.status}`);
+	}
+
+	return { data, headers: res.headers };
 }
 
 async function groqComplete(
 	model: string,
 	messages: ChatMessage[],
 	maxTokens: number,
-): Promise<{ data: GroqResponse; headers: Headers }> {
-	const res = await fetch(GROQ_ENDPOINT, {
-		method: 'POST',
-		headers: {
-			'content-type': 'application/json',
-			authorization: `Bearer ${env.groqApiKey}`,
+): Promise<{ data: OpenAIResponse; headers: Headers }> {
+	const r = await openAIComplete(GROQ_ENDPOINT, env.groqApiKey, model, messages, maxTokens);
+	recordObserved(model, readRateLimits(r.headers));
+	return r;
+}
+
+async function openrouterComplete(
+	model: string,
+	messages: ChatMessage[],
+	maxTokens: number,
+): Promise<{ data: OpenAIResponse; headers: Headers }> {
+	return openAIComplete(OPENROUTER_ENDPOINT, env.openrouterApiKey, model, messages, maxTokens);
+}
+
+async function mistralComplete(
+	model: string,
+	messages: ChatMessage[],
+	maxTokens: number,
+): Promise<{ data: OpenAIResponse; headers: Headers }> {
+	return openAIComplete(MISTRAL_ENDPOINT, env.mistralApiKey, model, messages, maxTokens);
+}
+
+function extractOpenAIResult(data: OpenAIResponse, provider: Provider): { text: string; usage: AskResult['usage'] } {
+	return {
+		text: data.choices?.[0]?.message?.content?.trim() ?? '*(no response)*',
+		usage: {
+			promptTokens: data.usage?.prompt_tokens ?? 0,
+			completionTokens: data.usage?.completion_tokens ?? 0,
+			totalTokens: data.usage?.total_tokens ?? 0,
 		},
-		body: JSON.stringify({ model, messages, temperature: AI_TEMPERATURE, max_tokens: maxTokens }),
-	});
-
-	const data = (await res.json()) as GroqResponse;
-
-	if (!res.ok || data.error) {
-		throw new Error(data.error?.message ?? `HTTP ${res.status}`);
-	}
-
-	recordObserved(model, readRateLimits(res.headers));
-
-	return { data, headers: res.headers };
+	};
 }
 
 interface GoogleResponse {
@@ -142,7 +181,7 @@ interface GoogleResponse {
 	};
 	error?: {
 		message?: string;
-		
+
 		rate_limit_metadata?: Array<{ name?: string; limit?: number; remaining?: number }>;
 	};
 }
@@ -246,6 +285,19 @@ function buildMessages(userId: string, question: string): ChatMessage[] {
 }
 
 
+function requireApiKey(provider: Provider, envKey: string): void {
+	const keyMap: Record<Provider, string> = {
+		groq: env.groqApiKey,
+		google: env.googleApiKey,
+		openrouter: env.openrouterApiKey,
+		mistral: env.mistralApiKey,
+	};
+	if (!keyMap[provider]) {
+		throw new Error(`${envKey} no configurada. Añádela al .env para usar modelos de ${provider}.`);
+	}
+}
+
+
 export async function ask(question: string, overrideModel: string | null, userId: string): Promise<AskResult> {
 	const model = overrideModel ?? getModel(userId);
 	const m = MODELS[model];
@@ -253,28 +305,32 @@ export async function ask(question: string, overrideModel: string | null, userId
 	if (!m) {
 		throw new Error(`Modelo no disponible: ${model}`);
 	}
-	if (m.provider === 'google' && !env.googleApiKey) {
-		throw new Error('GOOGLE_API_KEY no configurada. Añádela al .env para usar modelos de Google.');
-	}
 
 	const messages = buildMessages(userId, question);
 
 	if (m.provider === 'google') {
+		requireApiKey('google', 'GOOGLE_API_KEY');
 		const r = await googleComplete(model, messages, AI_MAX_TOKENS);
 		return { text: r.text, model, provider: 'google', usage: r.usage };
 	}
 
+	if (m.provider === 'openrouter') {
+		requireApiKey('openrouter', 'OPENROUTER_API_KEY');
+		const { data } = await openrouterComplete(model, messages, AI_MAX_TOKENS);
+		const r = extractOpenAIResult(data, 'openrouter');
+		return { text: r.text, model, provider: 'openrouter', usage: r.usage };
+	}
+
+	if (m.provider === 'mistral') {
+		requireApiKey('mistral', 'MISTRAL_API_KEY');
+		const { data } = await mistralComplete(model, messages, AI_MAX_TOKENS);
+		const r = extractOpenAIResult(data, 'mistral');
+		return { text: r.text, model, provider: 'mistral', usage: r.usage };
+	}
+
 	const { data } = await groqComplete(model, messages, AI_MAX_TOKENS);
-	return {
-		text: data.choices?.[0]?.message?.content?.trim() ?? '*(no response)*',
-		model,
-		provider: 'groq',
-		usage: {
-			promptTokens: data.usage?.prompt_tokens ?? 0,
-			completionTokens: data.usage?.completion_tokens ?? 0,
-			totalTokens: data.usage?.total_tokens ?? 0,
-		},
-	};
+	const r = extractOpenAIResult(data, 'groq');
+	return { text: r.text, model, provider: 'groq', usage: r.usage };
 }
 
 
