@@ -121,6 +121,9 @@ responses:
     copyButton: '📋 Copy'
     regenButton: '🔄 Regen'
     notAuthor: 'Only the author can use this button.'
+    askModalTitle: 'Ask a follow-up'
+    askModalLabel: 'Your question'
+    askModalPlaceholder: 'Ask anything about this response…'
   es:
     answerTruncated: '…'
     thinkingText: '{{0}} está pensando…'
@@ -169,3 +172,6 @@ responses:
     copyButton: '📋 Copiar'
     regenButton: '🔄 Regenerar'
     notAuthor: 'Solo el autor puede usar este botón.'
+    askModalTitle: 'Pregunta de seguimiento'
+    askModalLabel: 'Tu pregunta'
+    askModalPlaceholder: 'Pregunta algo sobre esta respuesta…'

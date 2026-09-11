@@ -226,14 +226,14 @@ export function showAskModal(interaction: ButtonInteraction): void {
 
   const modal = new ModalBuilder()
     .setCustomId(`ask_modal:${contentId}`)
-    .setTitle(t(data.lang, 'contextModalTitle'))
+    .setTitle(t(data.lang, 'askModalTitle'))
     .addComponents(
       new ActionRowBuilder<TextInputBuilder>().addComponents(
         new TextInputBuilder()
           .setCustomId('ask_input')
-          .setLabel(t(data.lang, 'contextModalLabel'))
+          .setLabel(t(data.lang, 'askModalLabel'))
           .setStyle(TextInputStyle.Paragraph)
-          .setPlaceholder(t(data.lang, 'contextModalPlaceholder'))
+          .setPlaceholder(t(data.lang, 'askModalPlaceholder'))
           .setRequired(true)
           .setMaxLength(2000),
       ),
@@ -255,7 +255,12 @@ export async function handleAskModal(interaction: ModalSubmitInteraction): Promi
   const modelId = getModel(interaction.user.id);
   const model = MODELS[modelId] ?? MODELS[DEFAULT_MODEL];
 
-  const newPrompt = `${data.originalPrompt}\n\nPrevious AI response:\n${data.text}\n\nUser follow-up: ${followUp}`;
+  const newPrompt =
+    `The user is asking about the following conversation:\n\n` +
+    `Original message: "${data.targetContent}"\n\n` +
+    `AI response:\n${data.text}\n\n` +
+    `User follow-up question: ${followUp}\n\n` +
+    `Answer the user's follow-up question directly and concisely. Use the conversation above as context, but respond naturally as if answering a new question.`;
 
   await deferComponents(interaction, { ephemeral: !data.visible });
 
@@ -265,21 +270,21 @@ export async function handleAskModal(interaction: ModalSubmitInteraction): Promi
 
     const emoji = modelEmoji(result.model);
     const mu = getModelUsage(result.model);
-    const answerText = cleanAnswer(result.text, data.promptTemplateKey as PendingKind);
+    const answerText = cleanAnswer(result.text, null);
 
     const newId = genId();
     const newData: PendingData = {
-      kind: data.kind,
+      kind: 'ask',
       text: answerText,
-      targetContent: data.targetContent,
+      targetContent: '',
       modelId: result.model,
       emoji,
       used: mu.used,
       limit: mu.limit,
-      targetMessageId: data.targetMessageId,
+      targetMessageId: null,
       channelId: data.channelId,
       guildId: data.guildId,
-      promptTemplateKey: data.promptTemplateKey,
+      promptTemplateKey: 'ask',
       originalPrompt: newPrompt,
       lang,
       authorId: interaction.user.id,
