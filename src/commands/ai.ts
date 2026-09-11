@@ -1,4 +1,5 @@
 import {
+	AutocompleteInteraction,
 	ChatInputCommandInteraction,
 	SlashCommandBuilder,
 	ApplicationIntegrationType,
@@ -50,10 +51,17 @@ export function modelEmoji(id: string): string {
 	return MODEL_EMOJI[id] ?? '';
 }
 
-const MODEL_CHOICES = CHAT_MODEL_IDS.map((id) => ({
-	name: `${MODELS[id].name} (${PROVIDER_LABEL[MODELS[id].provider]})`,
-	value: id,
-}));
+const MODEL_CHOICES = CHAT_MODEL_IDS
+	.sort((a, b) => {
+		const pa = MODELS[a].provider;
+		const pb = MODELS[b].provider;
+		if (pa !== pb) return pa.localeCompare(pb);
+		return MODELS[a].name.localeCompare(MODELS[b].name);
+	})
+	.map((id) => ({
+		name: `${PROVIDER_LABEL[MODELS[id].provider]} > ${MODELS[id].name}`,
+		value: id,
+	}));
 
 
 const COOLDOWN_MS = Math.max(0, parseInt(process.env.COOLDOWN_SECONDS ?? '3', 10) || 0) * 1000;
@@ -102,12 +110,12 @@ export const shCommand = {
 						.setDescription('What you want to ask')
 						.setRequired(true),
 				)
-				.addStringOption((o) =>
-					o
-						.setName('model')
-						.setDescription('One-time model override for this question')
-						.addChoices(...MODEL_CHOICES),
-				)
+			.addStringOption((o) =>
+				o
+					.setName('model')
+					.setDescription('One-time model override for this question')
+					.setAutocomplete(true),
+			)
 				.addBooleanOption((o) =>
 					o
 						.setName('visible')
@@ -118,12 +126,12 @@ export const shCommand = {
 			s
 				.setName('model')
 				.setDescription('View or change your default model')
-				.addStringOption((o) =>
-					o
-						.setName('model')
-						.setDescription('Model (omitting shows the current one)')
-						.addChoices(...MODEL_CHOICES),
-				)
+			.addStringOption((o) =>
+				o
+					.setName('model')
+					.setDescription('Model (omitting shows the current one)')
+					.setAutocomplete(true),
+			)
 				.addBooleanOption((o) =>
 					o
 						.setName('info')
@@ -162,7 +170,20 @@ export const shCommand = {
 		.addSubcommand((s) => s.setName('status').setDescription('Show your current configuration'))
 		.addSubcommand((s) => s.setName('reset').setDescription('Reset all your settings to defaults')),
 
-	async execute(interaction: ChatInputCommandInteraction): Promise<void> {
+	async execute(interaction: ChatInputCommandInteraction | AutocompleteInteraction): Promise<void> {
+		if (interaction.isAutocomplete()) {
+			const query = interaction.options.getFocused().toLowerCase();
+			const filtered = MODEL_CHOICES
+				.filter(c =>
+					c.name.toLowerCase().includes(query) ||
+					c.value.toLowerCase().includes(query)
+				)
+				.slice(0, 25);
+			await interaction.respond(
+				filtered.map(c => ({ name: c.name, value: c.value }))
+			);
+			return;
+		}
 		const sub = interaction.options.getSubcommand();
 		switch (sub) {
 			case 'ask':
@@ -389,37 +410,65 @@ async function handleUsage(interaction: ChatInputCommandInteraction): Promise<vo
 	await deferComponents(interaction, { ephemeral: true });
 
 	try {
+		const grouped = new Map<string, Array<{ id: string; used: number; limit: number }>>();
+		for (const id of CHAT_MODEL_IDS) {
+			const mu = getModelUsage(id);
+			if (mu.limit === 0) continue;
+			const provider = MODELS[id].provider;
+			const list = grouped.get(provider) ?? [];
+			list.push({ id, used: mu.used, limit: mu.limit });
+			grouped.set(provider, list);
+		}
+
+		const providerEmoji: Record<string, string> = {
+			groq: MODEL_EMOJI['groq/compound'] ?? '',
+			google: MODEL_EMOJI['gemini-2.5-flash'] ?? '',
+			openrouter: MODEL_EMOJI['meta-llama/llama-4-maverick:free'] ?? '',
+			mistral: MODEL_EMOJI['mistral-small-latest'] ?? '',
+		};
+
+		const providerOrder: Array<{ key: string; label: string }> = [
+			{ key: 'groq', label: PROVIDER_LABEL['groq'] ?? 'Groq' },
+			{ key: 'google', label: PROVIDER_LABEL['google'] ?? 'Google' },
+			{ key: 'openrouter', label: PROVIDER_LABEL['openrouter'] ?? 'OpenRouter' },
+			{ key: 'mistral', label: PROVIDER_LABEL['mistral'] ?? 'Mistral' },
+		];
+
+		const inner: V2Component[] = [
+			boxTitle(t(lang, 'usageTitle')),
+			separator(),
+			text(`## ${t(lang, 'usageShared')}`),
+		];
+
+		for (const { key, label } of providerOrder) {
+			const models = grouped.get(key);
+			if (!models || models.length === 0) continue;
+
+			const pEmoji = providerEmoji[key] ?? '';
+			inner.push(separator());
+			inner.push(text(`### ${pEmoji} ${label}`));
+
+			for (const m of models) {
+				const e = modelEmoji(m.id);
+				const pfx = e ? `${e} ` : '';
+				inner.push(text(`- ${pfx}${MODELS[m.id].name}: \`${m.used}/${m.limit}\``));
+			}
+		}
+
 		const groqModel = MODELS[model]?.provider === 'groq' ? model : Object.values(MODELS).find(m => m.provider === 'groq')?.id ?? model;
 		const rl = await fetchGroqUsage(groqModel);
 		const resetRequests = rl.resetRequests ? `\`${rl.resetRequests}\`` : '?';
 		const resetTokens = rl.resetTokens ? `\`${rl.resetTokens}\`` : '?';
 
-		const modelLines = CHAT_MODEL_IDS.map((id) => {
-			const mu = getModelUsage(id);
-			if (mu.limit === 0) return null;
-			const e = modelEmoji(id);
-			const pfx = e ? `${e} ` : '';
-			return `${pfx}${MODELS[id].name}: \`${mu.used}/${mu.limit}\``;
-		}).filter(Boolean);
+		inner.push(separator());
+		inner.push(text(
+			`## ${t(lang, 'usageLive')} · ${MODELS[groqModel]?.name ?? groqModel} (${PROVIDER_LABEL[MODELS[groqModel]?.provider ?? 'groq']})\n` +
+			`\`${rl.remainingRequests ?? '?'}/${rl.limitRequests ?? '?'}\` ${t(lang, 'usageRequestsTag')} · ` +
+			`${t(lang, 'usageReset')} ${resetRequests}\n` +
+			`\`${fmtK(rl.remainingTokens)}/${fmtK(rl.limitTokens)}\` ${t(lang, 'usageTokensTag')} · ` +
+			`${t(lang, 'usageReset')} ${resetTokens}`,
+		));
 
-		const inner: V2Component[] = [
-			boxTitle(t(lang, 'usageTitle')),
-			separator(),
-			text(
-				`## ${t(lang, 'usageShared')}\n` +
-					(modelLines.length ? modelLines.join('\n') : '-'),
-			),
-			separator(),
-			text(
-				`## ${t(lang, 'usageLive')} · ${MODELS[groqModel]?.name ?? groqModel} (${PROVIDER_LABEL[MODELS[groqModel]?.provider ?? 'groq']})\n` +
-					`\`${rl.remainingRequests ?? '?'}/${rl.limitRequests ?? '?'}\` ${t(lang, 'usageRequestsTag')} · ` +
-					`${t(lang, 'usageReset')} ${resetRequests}\n` +
-					`\`${fmtK(rl.remainingTokens)}/${fmtK(rl.limitTokens)}\` ${t(lang, 'usageTokensTag')} · ` +
-					`${t(lang, 'usageReset')} ${resetTokens}`,
-			),
-		];
-
-		
 		if (MODELS[model]?.provider === 'google') {
 			const goog = getObservedLimits(model);
 			if (goog?.limitRequests || goog?.limitTokens) {
@@ -427,10 +476,10 @@ async function handleUsage(interaction: ChatInputCommandInteraction): Promise<vo
 					separator(),
 					text(
 						`## ${t(lang, 'usageLive')} · ${MODELS[model]?.name ?? model} (${PROVIDER_LABEL[MODELS[model]?.provider ?? 'google']})\n` +
-							(goog.limitRequests !== null
-								? `\`${goog.remainingRequests ?? '?'}/${goog.limitRequests}\` ${t(lang, 'usageRequestsTag')}\n`
-								: '') +
-							`\`${fmtK(goog.remainingTokens)}/${fmtK(goog.limitTokens)}\` ${t(lang, 'usageTokensTag')}`,
+						(goog.limitRequests !== null
+							? `\`${goog.remainingRequests ?? '?'}/${goog.limitRequests}\` ${t(lang, 'usageRequestsTag')}\n`
+							: '') +
+						`\`${fmtK(goog.remainingTokens)}/${fmtK(goog.limitTokens)}\` ${t(lang, 'usageTokensTag')}`,
 					),
 				);
 			}
