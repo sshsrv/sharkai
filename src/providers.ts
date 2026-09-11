@@ -163,7 +163,30 @@ async function opencodeComplete(
 	messages: ChatMessage[],
 	maxTokens: number,
 ): Promise<{ data: OpenAIResponse; headers: Headers }> {
-	return openAIComplete(OPENCODE_ENDPOINT, env.opencodeApiKey, model, messages, maxTokens);
+	const sessionId = `ses_${crypto.randomUUID().slice(0, 12)}`;
+	const requestId = `msg_${crypto.randomUUID().slice(0, 12)}`;
+
+	const res = await fetch(OPENCODE_ENDPOINT, {
+		method: 'POST',
+		headers: {
+			'content-type': 'application/json',
+			'authorization': `Bearer ${env.opencodeApiKey || 'public'}`,
+			'user-agent': 'opencode/1.18.18 ai-sdk/provider-utils/4.0.38 runtime/node/20.11.0',
+			'x-opencode-client': 'cli',
+			'x-opencode-project': 'global',
+			'x-opencode-session': sessionId,
+			'x-opencode-request': requestId,
+		},
+		body: JSON.stringify({ model, messages, temperature: AI_TEMPERATURE, max_tokens: maxTokens }),
+	});
+
+	const data = (await res.json()) as OpenAIResponse;
+
+	if (!res.ok || data.error) {
+		throw new Error(data.error?.message ?? `HTTP ${res.status}`);
+	}
+
+	return { data, headers: res.headers };
 }
 
 function extractOpenAIResult(data: OpenAIResponse, provider: Provider): { text: string; usage: AskResult['usage'] } {
