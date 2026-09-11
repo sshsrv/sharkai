@@ -445,14 +445,14 @@ async function handleUsage(interaction: ChatInputCommandInteraction): Promise<vo
 			if (!models || models.length === 0) continue;
 
 			const pEmoji = providerEmoji[key] ?? '';
-			inner.push(separator());
-			inner.push(text(`### ${pEmoji} ${label}`));
-
-			for (const m of models) {
+			const modelLines = models.map(m => {
 				const e = modelEmoji(m.id);
 				const pfx = e ? `${e} ` : '';
-				inner.push(text(`- ${pfx}${MODELS[m.id].name}: \`${m.used}/${m.limit}\``));
-			}
+				return `- ${pfx}${MODELS[m.id].name}: \`${m.used}/${m.limit}\``;
+			}).join('\n');
+
+			inner.push(separator());
+			inner.push(text(`### ${pEmoji} ${label}\n${modelLines}`));
 		}
 
 		const groqModel = MODELS[model]?.provider === 'groq' ? model : Object.values(MODELS).find(m => m.provider === 'groq')?.id ?? model;

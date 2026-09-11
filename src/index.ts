@@ -56,6 +56,12 @@ console.log('✅ Comandos registrados: /sh, Fact-Check, Reply (user-install)');
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {
+ if (interaction.isAutocomplete()) {
+ if (interaction.commandName === 'sh') {
+ await shCommand.execute(interaction);
+ }
+ return;
+ }
  if (interaction.isChatInputCommand()) {
  if (interaction.commandName === 'sh') {
  await shCommand.execute(interaction);
