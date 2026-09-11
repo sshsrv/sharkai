@@ -1,0 +1,1 @@
+    const result = await ask(fullPrompt, model.id, interaction.user.id);

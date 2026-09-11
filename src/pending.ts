@@ -20,6 +20,7 @@ export interface PendingData {
   authorId: string;
   visible: boolean;
   createdAt: number;
+  messageId: string | null;
 }
 
 const pendingVisibility = new Map<string, PendingData>();

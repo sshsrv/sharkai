@@ -20,7 +20,9 @@ import { footer, modelEmoji } from './ai.js';
 import {
   replyComponents,
   deferComponents,
+  deferUpdate,
   editComponents,
+  updateComponents,
   text,
   separator,
   type V2Component,
@@ -43,9 +45,8 @@ function thinkingComponents(lang: Language, emoji: string, name: string): V2Comp
   return [text(t(lang, 'contextThinking', `${emoji} ${name}`))];
 }
 
-// --- Rate limiting for regen ---
 const regenLast = new Map<string, number>();
-const REGEN_COOLDOWN_MS = 10_000; // 10 seconds between regens
+const REGEN_COOLDOWN_MS = 10_000;
 
 function checkRegenRateLimit(userId: string): number | null {
   const now = Date.now();
@@ -55,8 +56,6 @@ function checkRegenRateLimit(userId: string): number | null {
   regenLast.set(userId, now);
   return null;
 }
-
-// --- Context menu: Fact-Check / Reply ---
 
 async function runContextAction(
   interaction: MessageContextMenuCommandInteraction,
@@ -85,12 +84,11 @@ async function runContextAction(
 
     const emoji = modelEmoji(result.model);
     const mu = getModelUsage(result.model);
-
-    const answerText = cleanAnswer(result.text, promptTemplateKey as PendingKind);
+    const answerText = cleanAnswer(result.text, promptTemplateKey);
 
     const contentId = genId();
-    setPendingData(contentId, {
-      kind: promptTemplateKey as PendingKind,
+    const pendingData: PendingData = {
+      kind: promptTemplateKey,
       text: answerText,
       targetContent,
       modelId: result.model,
@@ -106,22 +104,16 @@ async function runContextAction(
       authorId: interaction.user.id,
       visible: false,
       createdAt: Date.now(),
-    });
+      messageId: null,
+    };
+    setPendingData(contentId, pendingData);
 
-    const guildPart = interaction.guildId ?? '@me';
-    const messageUrl = `https://discord.com/channels/${guildPart}/${interaction.channelId}/${interaction.targetMessage.id}`;
-
-    const pending = getPendingData(contentId);
-    if (pending) {
-      await editComponents(interaction, renderComponents(pending, contentId, false));
-    }
+    await editComponents(interaction, renderComponents(pendingData, contentId, false));
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     await editComponents(interaction, [text(t(lang, 'error', message))]);
   }
 }
-
-// --- Button: Make Visible ---
 
 export async function handleMakeVisible(interaction: ButtonInteraction): Promise<void> {
   const contentId = interaction.customId.split(':')[1];
@@ -131,25 +123,20 @@ export async function handleMakeVisible(interaction: ButtonInteraction): Promise
     return;
   }
 
-  // Author-only
   if (interaction.user.id !== data.authorId) {
     await replyComponents(interaction, [text(t(data.lang, 'notAuthor'))], { ephemeral: true });
     return;
   }
 
   try {
-    // Re-store data (getPendingData deletes it) so buttons on the new message work
     const newId = genId();
-    setPendingData(newId, { ...data, visible: true, authorId: data.authorId, createdAt: Date.now() });
-
-    const components = renderComponents(data, newId, true);
-    await replyComponents(interaction, components);
+    const newData: PendingData = { ...data, visible: true, messageId: null, createdAt: Date.now() };
+    setPendingData(newId, newData);
+    await replyComponents(interaction, renderComponents(newData, newId, true));
   } catch {
     await replyComponents(interaction, [text('Could not send message (missing permissions?).')], { ephemeral: true });
   }
 }
-
-// --- Button: Copy (ephemeral code block) ---
 
 export async function handleCopy(interaction: ButtonInteraction): Promise<void> {
   const contentId = interaction.customId.split(':')[1];
@@ -159,14 +146,10 @@ export async function handleCopy(interaction: ButtonInteraction): Promise<void> 
     return;
   }
 
-  // Re-store so other buttons still work
   setPendingData(contentId, data);
-
   const codeBlock = `\`\`\`\n${data.text}\n\`\`\``;
   await replyComponents(interaction, [text(codeBlock)], { ephemeral: true });
 }
-
-// --- Button: Regenerate ---
 
 export async function handleRegen(interaction: ButtonInteraction): Promise<void> {
   const contentId = interaction.customId.split(':')[1];
@@ -176,100 +159,59 @@ export async function handleRegen(interaction: ButtonInteraction): Promise<void>
     return;
   }
 
-  // Author-only
   if (interaction.user.id !== data.authorId) {
     await replyComponents(interaction, [text(t(data.lang, 'notAuthor'))], { ephemeral: true });
     return;
   }
 
-  // Rate limit
   const wait = checkRegenRateLimit(interaction.user.id);
   if (wait) {
     await replyComponents(interaction, [text(t(data.lang, 'cooldown', String(wait)))], { ephemeral: true });
     return;
   }
 
-  // Re-run the original prompt
   const lang = data.lang;
   const modelId = getModel(interaction.user.id);
   const model = MODELS[modelId] ?? MODELS[DEFAULT_MODEL];
 
-  // If this was a context action (fact-check/reply), re-run as context action
-  if (data.kind === 'factCheckPrompt' || data.kind === 'replyPrompt') {
-    // Build fresh prompt from original
-    const promptBase = getPrompt(interaction.user.id) || defaultPrompt(lang);
-    const fullPrompt = `${promptBase}\n\n${t(lang, data.promptTemplateKey!, data.targetContent)}`;
+  await deferUpdate(interaction);
 
-    const thinkingEmoji = modelEmoji(model.id);
-    const thinkingName = model.name;
-
-    await deferComponents(interaction, { ephemeral: true });
-
-    try {
-      const result = await ask(fullPrompt, model.id, interaction.user.id);
-      recordRequest(result.provider, result.model);
-
-      const emoji = modelEmoji(result.model);
-      const mu = getModelUsage(result.model);
-      const answerText = cleanAnswer(result.text, data.promptTemplateKey as PendingKind);
-
-      const newId = genId();
-      setPendingData(newId, {
-        ...data,
-        text: answerText,
-        modelId: result.model,
-        emoji,
-        used: mu.used,
-        limit: mu.limit,
-        originalPrompt: fullPrompt,
-        authorId: interaction.user.id,
-        createdAt: Date.now(),
-      });
-
-      const pending = getPendingData(newId);
-      if (pending) {
-        await editComponents(interaction, renderComponents(pending, newId, false));
-      }
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      await editComponents(interaction, [text(t(lang, 'error', message))]);
+  try {
+    let fullPrompt: string;
+    if (data.kind === 'factCheckPrompt' || data.kind === 'replyPrompt') {
+      const promptBase = getPrompt(interaction.user.id) || defaultPrompt(lang);
+      fullPrompt = `${promptBase}\n\n${t(lang, data.promptTemplateKey!, data.targetContent)}`;
+    } else {
+      fullPrompt = data.originalPrompt;
     }
-  } else {
-    // /sh ask regen - re-ask with the original question from originalPrompt
-    await deferComponents(interaction, { ephemeral: true });
 
-    try {
-      const result = await ask(data.originalPrompt, null, interaction.user.id);
-      recordRequest(result.provider, result.model);
+    const result = await ask(fullPrompt, model.id, interaction.user.id);
+    recordRequest(result.provider, result.model);
 
-      const emoji = modelEmoji(result.model);
-      const mu = getModelUsage(result.model);
-      const answerText = cleanAnswer(result.text, data.kind);
+    const emoji = modelEmoji(result.model);
+    const mu = getModelUsage(result.model);
+    const answerText = cleanAnswer(result.text, data.promptTemplateKey as PendingKind);
 
-      const newId = genId();
-      setPendingData(newId, {
-        ...data,
-        text: answerText,
-        modelId: result.model,
-        emoji,
-        used: mu.used,
-        limit: mu.limit,
-        authorId: interaction.user.id,
-        createdAt: Date.now(),
-      });
+    const newId = genId();
+    const newData: PendingData = {
+      ...data,
+      text: answerText,
+      modelId: result.model,
+      emoji,
+      used: mu.used,
+      limit: mu.limit,
+      originalPrompt: fullPrompt,
+      authorId: interaction.user.id,
+      createdAt: Date.now(),
+    };
+    setPendingData(newId, newData);
 
-      const pending = getPendingData(newId);
-      if (pending) {
-        await editComponents(interaction, renderComponents(pending, newId, data.visible));
-      }
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      await editComponents(interaction, [text(t(lang, 'error', message))]);
-    }
+    await editComponents(interaction, renderComponents(newData, newId, data.visible));
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    await editComponents(interaction, [text(t(lang, 'error', message))]);
   }
 }
-
-// --- Button: Ask (modal → follow-up question) ---
 
 export function showAskModal(interaction: ButtonInteraction): void {
   const contentId = interaction.customId.split(':')[1];
@@ -279,8 +221,8 @@ export function showAskModal(interaction: ButtonInteraction): void {
     return;
   }
 
-  // Re-store so modal submit can access it
-  setPendingData(contentId, data);
+  const storedData: PendingData = { ...data, messageId: interaction.message.id };
+  setPendingData(contentId, storedData);
 
   const modal = new ModalBuilder()
     .setCustomId(`ask_modal:${contentId}`)
@@ -313,10 +255,9 @@ export async function handleAskModal(interaction: ModalSubmitInteraction): Promi
   const modelId = getModel(interaction.user.id);
   const model = MODELS[modelId] ?? MODELS[DEFAULT_MODEL];
 
-  // Build prompt: previous answer + follow-up question
   const newPrompt = `${data.originalPrompt}\n\nPrevious AI response:\n${data.text}\n\nUser follow-up: ${followUp}`;
 
-  await deferComponents(interaction, { ephemeral: true });
+  await deferComponents(interaction, { ephemeral: !data.visible });
 
   try {
     const result = await ask(newPrompt, model.id, interaction.user.id);
@@ -327,7 +268,7 @@ export async function handleAskModal(interaction: ModalSubmitInteraction): Promi
     const answerText = cleanAnswer(result.text, data.promptTemplateKey as PendingKind);
 
     const newId = genId();
-    setPendingData(newId, {
+    const newData: PendingData = {
       kind: data.kind,
       text: answerText,
       targetContent: data.targetContent,
@@ -344,19 +285,16 @@ export async function handleAskModal(interaction: ModalSubmitInteraction): Promi
       authorId: interaction.user.id,
       visible: data.visible,
       createdAt: Date.now(),
-    });
+      messageId: null,
+    };
+    setPendingData(newId, newData);
 
-    const pending = getPendingData(newId);
-    if (pending) {
-      await editComponents(interaction, renderComponents(pending, newId, data.visible));
-    }
+    await editComponents(interaction, renderComponents(newData, newId, data.visible));
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     await editComponents(interaction, [text(t(lang, 'error', message))]);
   }
 }
-
-// --- Button: Add Context (existing) ---
 
 export function showAddContextModal(interaction: ButtonInteraction): void {
   const contentId = interaction.customId.split(':')[1];
@@ -366,13 +304,13 @@ export function showAddContextModal(interaction: ButtonInteraction): void {
     return;
   }
 
-  // Author-only
   if (interaction.user.id !== data.authorId) {
     replyComponents(interaction, [text(t(data.lang, 'notAuthor'))], { ephemeral: true });
     return;
   }
 
-  setPendingData(contentId, data);
+  const storedData: PendingData = { ...data, messageId: interaction.message.id };
+  setPendingData(contentId, storedData);
 
   const modal = new ModalBuilder()
     .setCustomId(`context_modal:${contentId}`)
@@ -407,7 +345,7 @@ export async function handleContextModal(interaction: ModalSubmitInteraction): P
 
   const newPrompt = `${data.originalPrompt}\n\nAdditional context from user:\n${additionalContext}`;
 
-  await deferComponents(interaction, { ephemeral: true });
+  await deferUpdate(interaction);
 
   try {
     const result = await ask(newPrompt, model.id, interaction.user.id);
@@ -418,7 +356,7 @@ export async function handleContextModal(interaction: ModalSubmitInteraction): P
     const answerText = cleanAnswer(result.text, data.promptTemplateKey as PendingKind);
 
     const newContentId = genId();
-    setPendingData(newContentId, {
+    const newData: PendingData = {
       kind: data.kind,
       text: answerText,
       targetContent: data.targetContent,
@@ -435,19 +373,16 @@ export async function handleContextModal(interaction: ModalSubmitInteraction): P
       authorId: data.authorId,
       visible: data.visible,
       createdAt: Date.now(),
-    });
+      messageId: data.messageId,
+    };
+    setPendingData(newContentId, newData);
 
-    const pending = getPendingData(newContentId);
-    if (pending) {
-      await editComponents(interaction, renderComponents(pending, newContentId, data.visible));
-    }
+    await editComponents(interaction, renderComponents(newData, newContentId, data.visible));
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     await editComponents(interaction, [text(t(lang, 'error', message))]);
   }
 }
-
-// --- Context menu command builders ---
 
 export const factCheckCommand = new ContextMenuCommandBuilder()
   .setName('Fact-Check')

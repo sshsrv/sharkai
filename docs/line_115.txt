@@ -1,0 +1,1 @@
+ button(t(lang, 'makeVisible'), `make_visible:${contentId}`, 2),

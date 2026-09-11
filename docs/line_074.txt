@@ -1,0 +1,1 @@
+   out = out.slice(0, lineStart === -1 ? 0 : lineStart);

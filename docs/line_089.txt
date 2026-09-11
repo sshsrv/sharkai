@@ -1,0 +1,1 @@
+function thinkingComponents(lang: Language, emoji: string, name: string): V2Component[] {

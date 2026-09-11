@@ -1,0 +1,1 @@
+ messageUrl: string,

@@ -1,0 +1,1 @@
+import type { Language } from '../config.js';

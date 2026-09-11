@@ -1,0 +1,1 @@
+   .replace(/(## (?:Verdict|Veredicto)\n[🟢🟡🟠🔴⚪][^\n]*\n)(?!- )/, '$1- ');

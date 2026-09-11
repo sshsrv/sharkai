@@ -77,13 +77,30 @@ export async function deferComponents(
 }
 
 export async function deferUpdate(interaction: AnyInteraction): Promise<void> {
-await interaction.client.rest.post(
-Routes.interactionCallback(interaction.id, interaction.token),
-{
-body: {
-type: InteractionResponseType.DeferredMessageUpdate,
-data: {} }}
-);
+  await interaction.client.rest.post(
+    Routes.interactionCallback(interaction.id, interaction.token),
+    {
+      body: {
+        type: InteractionResponseType.DeferredMessageUpdate,
+        data: {},
+      },
+    },
+  );
+}
+
+export async function updateComponents(
+  interaction: AnyInteraction,
+  components: V2Component[],
+): Promise<void> {
+  await interaction.client.rest.post(
+    Routes.interactionCallback(interaction.id, interaction.token),
+    {
+      body: {
+        type: InteractionResponseType.UpdateMessage,
+        data: { flags: IS_COMPONENTS_V2, components },
+      },
+    },
+  );
 }
 
 export async function editComponents(

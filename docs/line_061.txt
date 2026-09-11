@@ -1,0 +1,1 @@
+  return lang === 'es' ? DEFAULT_PROMPT_ES : DEFAULT_PROMPT_EN;

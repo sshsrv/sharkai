@@ -1,0 +1,1 @@
+ text(footer(emoji, modelId, used, limit)),

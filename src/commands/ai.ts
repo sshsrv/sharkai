@@ -259,6 +259,7 @@ async function handleAsk(interaction: ChatInputCommandInteraction): Promise<void
 			authorId: interaction.user.id,
 			visible,
 			createdAt: Date.now(),
+			messageId: null,
 		});
 
 		const pending = getPendingData(contentId);

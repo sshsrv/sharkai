@@ -1,0 +1,1 @@
+  const targetContent = interaction.targetMessage.content || '(no text content)';
