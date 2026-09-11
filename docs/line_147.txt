@@ -1,1 +1,0 @@
-  const modelId = getModel(interaction.user.id);

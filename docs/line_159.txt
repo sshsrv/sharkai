@@ -1,1 +1,0 @@
-    thinkingComponents(lang, thinkingEmoji, thinkingName),

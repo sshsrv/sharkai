@@ -1,1 +1,0 @@
-  const data = pendingVisibility.get(id);

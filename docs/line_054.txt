@@ -1,1 +1,0 @@
-export function getPendingData(id: string): PendingData | undefined {

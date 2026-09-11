@@ -1,1 +1,0 @@
-const pendingVisibility = new Map<string, PendingData>();

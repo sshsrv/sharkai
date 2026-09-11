@@ -1,1 +1,0 @@
-  if (out.lastIndexOf('[', out.length - 1) > out.length - 200) {

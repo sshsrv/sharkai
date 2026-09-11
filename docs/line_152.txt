@@ -1,1 +1,0 @@
-  const fullPrompt = `${promptBase}\n\n${t(lang, promptTemplateKey, targetContent)}`;

@@ -1,1 +1,0 @@
-    recordRequest(result.provider, result.model);

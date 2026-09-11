@@ -1,1 +1,0 @@
-  return randomBytes(8).toString('hex');

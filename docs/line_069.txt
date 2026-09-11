@@ -1,1 +1,0 @@
-  out = out.slice(0, CHARS_BUDGET - 200);
