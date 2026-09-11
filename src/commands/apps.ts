@@ -276,7 +276,7 @@ export async function handleAskModal(interaction: ModalSubmitInteraction): Promi
     const newData: PendingData = {
       kind: 'ask',
       text: answerText,
-      targetContent: '',
+      targetContent: followUp,
       modelId: result.model,
       emoji,
       used: mu.used,

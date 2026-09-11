@@ -31,8 +31,10 @@ export function cleanAnswer(text: string, promptTemplateKey: PendingKind | null)
 export function renderComponents(pending: PendingData, contentId: string, visible: boolean): V2Component[] {
   const { kind, text: body, emoji, modelId, used, limit, lang, targetContent, targetMessageId, channelId, guildId } = pending;
 
-  const header = kind !== 'ask' && targetContent && targetMessageId
-    ? `# [${targetContent}](https://discord.com/channels/${guildId ?? '@me'}/${channelId}/${targetMessageId})`
+  const header = targetContent
+    ? kind === 'ask'
+      ? `# ${targetContent}`
+      : `# [${targetContent}](https://discord.com/channels/${guildId ?? '@me'}/${channelId}/${targetMessageId})`
     : undefined;
 
   const label = kind === 'factCheckPrompt' ? t(lang, 'factCheckLabel') : '';
