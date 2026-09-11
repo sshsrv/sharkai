@@ -124,7 +124,7 @@ export const shCommand = {
 		)
 		.addSubcommand((s) =>
 			s
-				.setName('model')
+				.setName('use')
 				.setDescription('View or change your default model')
 			.addStringOption((o) =>
 				o
@@ -165,7 +165,7 @@ export const shCommand = {
 						.addChoices(...LANGUAGE_CHOICES),
 				),
 		)
-		.addSubcommand((s) => s.setName('usage').setDescription('Show your shared usage and live limits'))
+		.addSubcommand((s) => s.setName('models').setDescription('Show your shared usage and live limits'))
 		.addSubcommand((s) => s.setName('clear').setDescription('Clear your conversation history (start fresh context)'))
 		.addSubcommand((s) => s.setName('status').setDescription('Show your current configuration'))
 		.addSubcommand((s) => s.setName('reset').setDescription('Reset all your settings to defaults')),
@@ -189,7 +189,7 @@ export const shCommand = {
 			case 'ask':
 				await handleAsk(interaction);
 				break;
-			case 'model':
+			case 'use':
 				await handleModel(interaction);
 				break;
 			case 'prompt':
@@ -198,7 +198,7 @@ export const shCommand = {
 			case 'language':
 				await handleLanguage(interaction);
 				break;
-			case 'usage':
+			case 'models':
 				await handleUsage(interaction);
 				break;
 			case 'clear':

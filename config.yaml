@@ -205,7 +205,7 @@ models:
     description: "Mistral Small. Fast, efficient model with generous free tier."
     tpm: 500000
     rpm: 30
-    rpd: 1000
+    rpd: 0
     context: 131072
     multimodal: false
   gemini-2.5-pro:
@@ -223,7 +223,7 @@ models:
     description: "NVIDIA Nemotron 3 Ultra. 550B MoE, frontier reasoning and orchestration."
     tpm: 260000
     rpm: 20
-    rpd: 200
+    rpd: 0
     context: 1000000
     multimodal: false
   nvidia/nemotron-3.5-lightning:free:
@@ -232,7 +232,7 @@ models:
     description: "NVIDIA Nemotron 3.5 Lightning. Fast 30B MoE, high-throughput agentic workloads."
     tpm: 260000
     rpm: 20
-    rpd: 200
+    rpd: 0
     context: 1000000
     multimodal: false
   nvidia/nemotron-3-super-120b-a12b:free:
@@ -241,7 +241,7 @@ models:
     description: "NVIDIA Nemotron 3 Super. 120B MoE, hybrid Mamba-Transformer."
     tpm: 260000
     rpm: 20
-    rpd: 200
+    rpd: 0
     context: 262144
     multimodal: false
   nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free:
@@ -250,7 +250,7 @@ models:
     description: "NVIDIA Nemotron 3 Nano Omni. 30B MoE, full multimodal perception."
     tpm: 260000
     rpm: 20
-    rpd: 200
+    rpd: 0
     context: 256000
     multimodal: true
   inclusionai/ling-3.0-flash-sante:free:
@@ -259,7 +259,7 @@ models:
     description: "inclusionAI Ling 3.0 Flash Sante. Health and medicine focused, 124B MoE."
     tpm: 260000
     rpm: 20
-    rpd: 200
+    rpd: 0
     context: 262144
     multimodal: false
   inclusionai/ling-3.0-flash-fin:free:
@@ -268,7 +268,7 @@ models:
     description: "inclusionAI Ling 3.0 Flash Fin. Finance focused, 124B MoE."
     tpm: 260000
     rpm: 20
-    rpd: 200
+    rpd: 0
     context: 262144
     multimodal: false
   inclusionai/ling-3.0-flash-vl:free:
@@ -277,7 +277,7 @@ models:
     description: "inclusionAI Ling 3.0 Flash VL. Visual perception and visual agents, 124B MoE."
     tpm: 260000
     rpm: 20
-    rpd: 200
+    rpd: 0
     context: 262144
     multimodal: true
   poolside/laguna-s-2.1:free:
@@ -286,7 +286,7 @@ models:
     description: "Poolside Laguna S 2.1. Coding agent, 118B MoE, high terminal benchmark."
     tpm: 260000
     rpm: 20
-    rpd: 200
+    rpd: 0
     context: 262144
     multimodal: false
   poolside/laguna-xs-2.1:free:
@@ -295,7 +295,7 @@ models:
     description: "Poolside Laguna XS 2.1. Compact coding agent, 33B MoE."
     tpm: 260000
     rpm: 20
-    rpd: 200
+    rpd: 0
     context: 262144
     multimodal: false
   cohere/north-mini-code:free:
@@ -304,7 +304,7 @@ models:
     description: "Cohere North Mini Code. Agentic coding, 30B MoE, Apache 2.0."
     tpm: 260000
     rpm: 20
-    rpd: 200
+    rpd: 0
     context: 256000
     multimodal: false
   liquid/lfm-2.5-2.6b:free:
@@ -313,7 +313,7 @@ models:
     description: "LiquidAI LFM2.5-2.6B. Compact reasoning, RAG, data extraction."
     tpm: 260000
     rpm: 20
-    rpd: 200
+    rpd: 0
     context: 65536
     multimodal: false
   dots-studio/dots-3-note-preview:free:
@@ -322,7 +322,7 @@ models:
     description: "Dots Studio Dots3-Note. 280B MoE, multimodal reasoning, long context."
     tpm: 260000
     rpm: 20
-    rpd: 200
+    rpd: 0
     context: 512000
     multimodal: true
   nex-agi/nex-n2.5-mini:free:
@@ -331,7 +331,7 @@ models:
     description: "Nex AGI Nex-N2.5-Mini. Agentic coding with visual feedback loop."
     tpm: 260000
     rpm: 20
-    rpd: 200
+    rpd: 0
     context: 262144
     multimodal: true
   nex-agi/nex-n2.5-pro:free:
@@ -340,7 +340,7 @@ models:
     description: "Nex AGI Nex-N2.5-Pro. Autonomous software engineering."
     tpm: 260000
     rpm: 20
-    rpd: 200
+    rpd: 0
     context: 262144
     multimodal: true
   google/gemma-4-31b-it:free:
@@ -349,7 +349,7 @@ models:
     description: "Google Gemma 4 31B via OpenRouter. Dense multimodal, thinking mode, Apache 2.0."
     tpm: 260000
     rpm: 20
-    rpd: 200
+    rpd: 0
     context: 262144
     multimodal: true
   google/gemma-4-26b-a4b-it:free:
@@ -358,7 +358,7 @@ models:
     description: "Google Gemma 4 26B A4B via OpenRouter. MoE efficient, near-31B quality."
     tpm: 260000
     rpm: 20
-    rpd: 200
+    rpd: 0
     context: 262144
     multimodal: true
   nvidia/nemotron-3.5-content-safety:free:
@@ -367,7 +367,7 @@ models:
     description: "NVIDIA Nemotron 3.5 Content Safety. Guardrail model for moderation."
     tpm: 260000
     rpm: 20
-    rpd: 200
+    rpd: 0
     context: 128000
     multimodal: true
   openrouter/free:
@@ -376,7 +376,7 @@ models:
     description: "OpenRouter auto-router. Picks the best free model for each request."
     tpm: 200000
     rpm: 20
-    rpd: 200
+    rpd: 0
     context: 200000
     multimodal: true
   mistral-large-2512:
@@ -385,7 +385,7 @@ models:
     description: "Mistral Large 3. Frontier quality, 256k context, multimodal."
     tpm: 500000
     rpm: 30
-    rpd: 1000
+    rpd: 0
     context: 256000
     multimodal: true
   ministral-14b-2512:
@@ -394,7 +394,7 @@ models:
     description: "Ministral 3 14B. Mid-tier model, 256k context, multimodal."
     tpm: 500000
     rpm: 30
-    rpd: 1000
+    rpd: 0
     context: 256000
     multimodal: true
   ministral-8b-2512:
@@ -403,7 +403,7 @@ models:
     description: "Ministral 3 8B. Fast and efficient, 256k context, multimodal."
     tpm: 500000
     rpm: 30
-    rpd: 1000
+    rpd: 0
     context: 256000
     multimodal: true
   ministral-3b-2512:
@@ -412,7 +412,7 @@ models:
     description: "Ministral 3 3B. Ultra-lightweight, 256k context, multimodal."
     tpm: 500000
     rpm: 30
-    rpd: 1000
+    rpd: 0
     context: 256000
     multimodal: true
   codestral-2508:
@@ -421,7 +421,7 @@ models:
     description: "Codestral. Purpose-built for code generation, 128k context."
     tpm: 500000
     rpm: 30
-    rpd: 1000
+    rpd: 0
     context: 128000
     multimodal: false
   muse-spark-1.3-free:
@@ -478,6 +478,15 @@ models:
     rpd: 0
     context: 131072
     multimodal: false
+  big-pickle:
+    name: Big Pickle
+    provider: opencode
+    description: "Big Pickle via OpenCode. Stealth model."
+    tpm: 200000
+    rpm: 20
+    rpd: 0
+    context: 131072
+    multimodal: false
 
 model_emojis:
   openai/gpt-oss-120b: <:openai:1547015408110800967>
@@ -529,3 +538,4 @@ model_emojis:
   muse-spark-1.2-free: <:meta:1547988455106158653>
   nemotron-3-ultra-free: <:opencode:1547987872844484618>
   mimo-v2.5-free: <:xiaomi:1547990136363552989>
+  big-pickle: <:opencode:1547987872844484618>
