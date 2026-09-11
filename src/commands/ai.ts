@@ -421,10 +421,10 @@ async function handleUsage(interaction: ChatInputCommandInteraction): Promise<vo
 		}
 
 		const providerEmoji: Record<string, string> = {
-			groq: MODEL_EMOJI['groq/compound'] ?? '',
-			google: MODEL_EMOJI['gemini-2.5-flash'] ?? '',
-			openrouter: MODEL_EMOJI['meta-llama/llama-4-maverick:free'] ?? '',
-			mistral: MODEL_EMOJI['mistral-small-latest'] ?? '',
+			groq: '<:groq:1547015390939320320>',
+			google: '<:google:1547015367174397952>',
+			openrouter: '<:openrouter:1547913422551916606>',
+			mistral: '<:mistral:1547911139063496775>',
 		};
 
 		const providerOrder: Array<{ key: string; label: string }> = [
