@@ -34,10 +34,12 @@ import {
 	replyComponents,
 	deferComponents,
 	editComponents,
+	followUpComponents,
 	text,
 	separator,
 	heading,
 	box,
+	totalChars,
 } from '../components.js';
 import { genId, getPendingData, setPendingData } from '../pending.js';
 import { renderComponents } from '../render.js';
@@ -374,12 +376,12 @@ async function handleModels(interaction: ChatInputCommandInteraction): Promise<v
 			{ key: 'opencode', label: PROVIDER_LABEL['opencode'] ?? 'OpenCode' },
 		];
 
-		const inner: V2Component[] = [
-			boxTitle(t(lang, 'modelsTitle')),
-			separator(),
-			text(`## ${t(lang, 'modelsShared')}`),
-		];
+		const legendText = `\n---\n**${t(lang, 'modelsLegendTitle')}**\n` +
+			`${PRIVACY_SHIELD.safe} ${t(lang, 'privacySafe')} · ` +
+			`${PRIVACY_SHIELD.warn} ${t(lang, 'privacyWarn')} · ` +
+			`${PRIVACY_SHIELD.unsafe} ${t(lang, 'privacyUnsafe')}`;
 
+		const providerBlocks: Array<{ header: string; models: string }> = [];
 		for (const { key, label } of providerOrder) {
 			const models = grouped.get(key);
 			if (!models || models.length === 0) continue;
@@ -399,19 +401,63 @@ async function handleModels(interaction: ChatInputCommandInteraction): Promise<v
 				return `- ${shield}・${e} ${MODELS[m.id].name} \`${usage}\``;
 			}).join('\n');
 
-			inner.push(separator());
-			inner.push(text(`### ${pEmoji} ${label}\n${modelLines}`));
+			providerBlocks.push({
+				header: `### ${pEmoji} ${label}`,
+				models: modelLines,
+			});
 		}
 
-		inner.push(separator());
-		inner.push(text(
-			`**${t(lang, 'modelsLegendTitle')}**\n` +
-			`${PRIVACY_SHIELD.safe} ${t(lang, 'privacySafe')} · ` +
-			`${PRIVACY_SHIELD.warn} ${t(lang, 'privacyWarn')} · ` +
-			`${PRIVACY_SHIELD.unsafe} ${t(lang, 'privacyUnsafe')}`
-		));
+		const BOX_BUDGET = 3800;
+		const pages: V2Component[][] = [];
+		let currentPage: V2Component[] = [];
+		let currentChars = 0;
 
-		await editComponents(interaction, [box(inner)]);
+		const titleText = t(lang, 'modelsTitle');
+		const subtitleText = t(lang, 'modelsShared');
+
+		for (const block of providerBlocks) {
+			const blockText = `${block.header}\n${block.models}`;
+			const blockChars = blockText.length + 4;
+
+			if (currentPage.length === 0) {
+				currentPage.push(boxTitle(titleText), separator(), text(`## ${subtitleText}`));
+				currentChars = titleText.length + subtitleText.length + 10;
+			}
+
+			if (currentChars + blockChars > BOX_BUDGET && currentPage.length > 3) {
+				pages.push(currentPage);
+				currentPage = [boxTitle(titleText), separator(), text(`## ${subtitleText}`)];
+				currentChars = titleText.length + subtitleText.length + 10;
+			}
+
+			currentPage.push(separator(), text(blockText));
+			currentChars += blockChars;
+		}
+
+		if (currentPage.length > 0) {
+			if (pages.length === 0) {
+				currentPage.push(separator(), text(legendText));
+			}
+			pages.push(currentPage);
+		}
+
+		if (pages.length > 1) {
+			const lastPage = pages[pages.length - 1];
+			const legendBlock = separator();
+			const legendTextBlock = text(legendText);
+			lastPage.push(legendBlock, legendTextBlock);
+		}
+
+		if (pages.length === 0) {
+			await editComponents(interaction, [text('No models available.')]);
+			return;
+		}
+
+		await editComponents(interaction, [box(pages[0])]);
+
+		for (let i = 1; i < pages.length; i++) {
+			await followUpComponents(interaction, [box(pages[i])], { ephemeral: true });
+		}
 	} catch (err) {
 		const message = err instanceof Error ? err.message : String(err);
 		await editComponents(interaction, [text(t(lang, 'usageError', message))]);

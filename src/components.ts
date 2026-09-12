@@ -113,6 +113,17 @@ export async function editComponents(
  );
 }
 
+export async function followUpComponents(
+ interaction: AnyInteraction,
+ components: V2Component[],
+ opts: { ephemeral?: boolean } = {}
+): Promise<void> {
+ await interaction.client.rest.post(
+ Routes.webhookMessage(interaction.client.user.id, interaction.token),
+ { body: { flags: flags(opts), components } }
+ );
+}
+
 export function totalChars(components: V2Component[]): number {
  let n = 0;
  for (const c of components) {
