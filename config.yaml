@@ -387,16 +387,6 @@ models:
     rpd: 0
     context: 200000
     multimodal: true
-  mistral-large-2512:
-    name: Mistral Large 3
-    provider: mistral
-    description: "Mistral Large 3. Frontier quality, 256k context, multimodal."
-    privacy: warn
-    tpm: 500000
-    rpm: 30
-    rpd: 0
-    context: 256000
-    multimodal: true
   ministral-14b-2512:
     name: Ministral 3 14B
     provider: mistral
@@ -437,16 +427,6 @@ models:
     rpd: 0
     context: 128000
     multimodal: false
-  muse-spark-1.3-free:
-    name: Muse Spark 1.3 Free
-    provider: opencode
-    description: "Meta Muse Spark 1.3 via OpenCode. Free tier."
-    privacy: warn
-    tpm: 200000
-    rpm: 20
-    rpd: 0
-    context: 131072
-    multimodal: false
   ling-3.0-flash-fin-free:
     name: Ling 3.0 Flash Fin Free
     provider: opencode
@@ -461,16 +441,6 @@ models:
     name: Nemotron 3.5 Lightning Free
     provider: opencode
     description: "NVIDIA Nemotron 3.5 Lightning via OpenCode. Fast 30B MoE."
-    privacy: warn
-    tpm: 200000
-    rpm: 20
-    rpd: 0
-    context: 131072
-    multimodal: false
-  muse-spark-1.2-free:
-    name: Muse Spark 1.2 Free
-    provider: opencode
-    description: "Meta Muse Spark 1.2 via OpenCode. Free tier."
     privacy: warn
     tpm: 200000
     rpm: 20
@@ -544,15 +514,12 @@ model_emojis:
   google/gemma-4-26b-a4b-it:free: <:google:1547015367174397952>
   nvidia/nemotron-3.5-content-safety:free: <:nvidia:1547912276064079983>
   openrouter/free: <:openrouter:1547913422551916606>
-  mistral-large-2512: <:mistral:1547911139063496775>
   ministral-14b-2512: <:mistral:1547911139063496775>
   ministral-8b-2512: <:mistral:1547911139063496775>
   ministral-3b-2512: <:mistral:1547911139063496775>
   codestral-2508: <:mistral:1547911139063496775>
-  muse-spark-1.3-free: <:meta:1547988455106158653>
   ling-3.0-flash-fin-free: <:opencode:1547987872844484618>
   nemotron-3.5-lightning-free: <:opencode:1547987872844484618>
-  muse-spark-1.2-free: <:meta:1547988455106158653>
   nemotron-3-ultra-free: <:opencode:1547987872844484618>
   mimo-v2.5-free: <:xiaomi:1547990136363552989>
   big-pickle: <:opencode:1547987872844484618>
