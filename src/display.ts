@@ -6,6 +6,7 @@ export function modelEmoji(id: string): string {
 
 export function footer(emoji: string | undefined, model: string, used: number, limit: number): string {
   const e = emoji ? `${emoji} ` : '';
-  const usage = limit === 0 ? '∞/∞' : `${used}/${limit}`;
-  return `-# ${e}${model}・${usage} daily・Results are AI generated`;
+  if (limit === 0) return `-# ${e}${model}・∞ daily・Results are AI generated`;
+  const remaining = Math.max(0, limit - used);
+  return `-# ${e}${model}・${remaining}/${limit} daily・Results are AI generated`;
 }

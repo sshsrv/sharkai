@@ -84,8 +84,9 @@ function fmtK(n: number | null | undefined): string {
 
 export function footer(emoji: string | undefined, model: string, used: number, limit: number): string {
 	const e = emoji ? `${emoji} ` : '';
-	const usage = limit === 0 ? '∞/∞' : `${used}/${limit}`;
-	return `-# ${e}${model}・${usage} daily・Results are AI generated`;
+	if (limit === 0) return `-# ${e}${model}・∞ daily・Results are AI generated`;
+	const remaining = Math.max(0, limit - used);
+	return `-# ${e}${model}・${remaining}/${limit} daily・Results are AI generated`;
 }
 
 export const shCommand = {
@@ -93,8 +94,8 @@ export const shCommand = {
 		.setName('sh')
 		.setDescription('SharkAI: all-in-one AI assistant')
 
-		.setIntegrationTypes([ApplicationIntegrationType.UserInstall])
-		.setContexts([InteractionContextType.BotDM, InteractionContextType.PrivateChannel])
+		.setIntegrationTypes([ApplicationIntegrationType.UserInstall, ApplicationIntegrationType.GuildInstall])
+		.setContexts([InteractionContextType.Guild, InteractionContextType.BotDM, InteractionContextType.PrivateChannel])
 		.addSubcommand((s) =>
 			s
 				.setName('ask')
@@ -397,7 +398,7 @@ async function handleModels(interaction: ChatInputCommandInteraction): Promise<v
 			const modelLines = sorted.map(m => {
 				const e = modelEmoji(m.id);
 				const shield = PRIVACY_SHIELD[MODELS[m.id].privacy];
-				const usage = m.limit === 0 ? '∞/∞' : `${m.used}/${m.limit}`;
+				const usage = m.limit === 0 ? '∞' : `${Math.max(0, m.limit - m.used)}/${m.limit}`;
 				return `- ${shield}・${e} ${MODELS[m.id].name} \`${usage}\``;
 			}).join('\n');
 
@@ -476,7 +477,7 @@ async function handleUsage(interaction: ChatInputCommandInteraction): Promise<vo
 	try {
 		const m = MODELS[model];
 		const mu = getModelUsage(model);
-		const usage = mu.limit === 0 ? '∞/∞' : `${mu.used}/${mu.limit}`;
+		const usage = mu.limit === 0 ? '∞' : `${Math.max(0, mu.limit - mu.used)}/${mu.limit}`;
 
 		const inner: V2Component[] = [
 			boxTitle(t(lang, 'usageTitle')),
