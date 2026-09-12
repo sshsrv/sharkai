@@ -107,30 +107,10 @@ models:
     rpd: 250
     context: 131072
     multimodal: false
-  gemini-2.5-flash:
-    name: Gemini 2.5 Flash
-    provider: google
-    description: "Google Gemini 2.5 Flash. Fast, efficient, strong reasoning for everyday tasks."
-    privacy: unsafe
-    tpm: 250000
-    rpm: 5
-    rpd: 20
-    context: 1048576
-    multimodal: true
-  gemini-2.5-flash-lite:
-    name: Gemini 2.5 Flash-Lite
-    provider: google
-    description: "Google Gemini 2.5 Flash-Lite. Cheapest and fastest Gemini model."
-    privacy: unsafe
-    tpm: 250000
-    rpm: 10
-    rpd: 20
-    context: 1048576
-    multimodal: true
   gemini-3-flash-preview:
     name: Gemini 3 Flash
     provider: google
-    description: "Google Gemini 3 Flash. Latest compact model, great speed/quality balance."
+    description: "Google Gemini 3 Flash. Preview model, great speed/quality balance."
     privacy: unsafe
     tpm: 250000
     rpm: 5
@@ -170,7 +150,7 @@ models:
   gemini-3.6-flash:
     name: Gemini 3.6 Flash
     provider: google
-    description: "Google Gemini 3.6 Flash. Newest compact iteration."
+    description: "Google Gemini 3.6 Flash. Improved token efficiency, recommended."
     privacy: unsafe
     tpm: 250000
     rpm: 5
@@ -180,7 +160,7 @@ models:
   gemini-3.7-flash:
     name: Gemini 3.7 Flash
     provider: google
-    description: "Google Gemini 3.7 Flash. Newest compact iteration."
+    description: "Google Gemini 3.7 Flash. Latest workhorse model for coding/agents."
     privacy: unsafe
     tpm: 250000
     rpm: 5
@@ -190,7 +170,7 @@ models:
   gemini-3.8-flash:
     name: Gemini 3.8 Flash
     provider: google
-    description: "Google Gemini 3.8 Flash. Latest and most capable compact model."
+    description: "Google Gemini 3.8 Flash. Newest and most capable Flash model (Sep 2026)."
     privacy: unsafe
     tpm: 250000
     rpm: 5
@@ -227,16 +207,6 @@ models:
     rpd: 0
     context: 131072
     multimodal: false
-  gemini-2.5-pro:
-    name: Gemini 2.5 Pro
-    provider: google
-    description: "Google Gemini 2.5 Pro. High-capability model for complex reasoning and coding."
-    privacy: unsafe
-    tpm: 250000
-    rpm: 5
-    rpd: 100
-    context: 1048576
-    multimodal: true
   nvidia/nemotron-3-ultra-550b-a55b:free:
     name: Nemotron 3 Ultra
     provider: openrouter
@@ -546,8 +516,6 @@ model_emojis:
   qwen/qwen3.8-27b: <:qwen:1547015425496195073>
   groq/compound: <:groq:1547015390939320320>
   groq/compound-mini: <:groq:1547015390939320320>
-  gemini-2.5-flash: <:google:1547015367174397952>
-  gemini-2.5-flash-lite: <:google:1547015367174397952>
   gemini-3-flash-preview: <:google:1547015367174397952>
   gemini-3.1-flash-lite: <:google:1547015367174397952>
   gemini-3.5-flash: <:google:1547015367174397952>
@@ -558,7 +526,6 @@ model_emojis:
   gemma-4-31b-it: <:google:1547015367174397952>
   gemma-4-26b-a4b-it: <:google:1547015367174397952>
   mistral-small-latest: <:mistral:1547911139063496775>
-  gemini-2.5-pro: <:google:1547015367174397952>
   nvidia/nemotron-3-ultra-550b-a55b:free: <:nvidia:1547912276064079983>
   nvidia/nemotron-3.5-lightning:free: <:nvidia:1547912276064079983>
   nvidia/nemotron-3-super-120b-a12b:free: <:nvidia:1547912276064079983>

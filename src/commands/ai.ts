@@ -456,7 +456,11 @@ async function handleModels(interaction: ChatInputCommandInteraction): Promise<v
 		await editComponents(interaction, [box(pages[0])]);
 
 		for (let i = 1; i < pages.length; i++) {
-			await followUpComponents(interaction, [box(pages[i])], { ephemeral: true });
+			try {
+				await followUpComponents(interaction, [box(pages[i])], { ephemeral: true });
+			} catch {
+				break;
+			}
 		}
 	} catch (err) {
 		const message = err instanceof Error ? err.message : String(err);
@@ -482,18 +486,23 @@ async function handleUsage(interaction: ChatInputCommandInteraction): Promise<vo
 		];
 
 		if (m?.provider === 'groq') {
-			const rl = await fetchGroqUsage(model);
-			const resetRequests = rl.resetRequests ? `\`${rl.resetRequests}\`` : '?';
-			const resetTokens = rl.resetTokens ? `\`${rl.resetTokens}\`` : '?';
+			try {
+				const rl = await fetchGroqUsage(model);
+				const resetRequests = rl.resetRequests ? `\`${rl.resetRequests}\`` : '?';
+				const resetTokens = rl.resetTokens ? `\`${rl.resetTokens}\`` : '?';
 
-			inner.push(separator());
-			inner.push(text(
-				`## ${t(lang, 'usageLive')} · ${m.name}\n` +
-				`\`${rl.remainingRequests ?? '?'}/${rl.limitRequests ?? '?'}\` ${t(lang, 'usageRequestsTag')} · ` +
-				`${t(lang, 'usageReset')} ${resetRequests}\n` +
-				`\`${fmtK(rl.remainingTokens)}/${fmtK(rl.limitTokens)}\` ${t(lang, 'usageTokensTag')} · ` +
-				`${t(lang, 'usageReset')} ${resetTokens}`,
-			));
+				inner.push(separator());
+				inner.push(text(
+					`## ${t(lang, 'usageLive')} · ${m.name}\n` +
+					`\`${rl.remainingRequests ?? '?'}/${rl.limitRequests ?? '?'}\` ${t(lang, 'usageRequestsTag')} · ` +
+					`${t(lang, 'usageReset')} ${resetRequests}\n` +
+					`\`${fmtK(rl.remainingTokens)}/${fmtK(rl.limitTokens)}\` ${t(lang, 'usageTokensTag')} · ` +
+					`${t(lang, 'usageReset')} ${resetTokens}`,
+				));
+			} catch {
+				inner.push(separator());
+				inner.push(text(`Limits from ${PROVIDER_LABEL['groq'] ?? 'Groq'} free tier.`));
+			}
 		} else if (m?.provider === 'google') {
 			const goog = getObservedLimits(model);
 			if (goog?.limitRequests || goog?.limitTokens) {
