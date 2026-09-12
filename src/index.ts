@@ -4,8 +4,12 @@ import { shCommand } from './commands/ai.js';
 import {
   factCheckCommand,
   replyMessageCommand,
+  summarizeCommand,
+  explainCommand,
   handleFactCheck,
   handleReplyMessage,
+  handleSummarize,
+  handleExplain,
   handleMakeVisible,
   handleCopy,
   handleRegen,
@@ -47,8 +51,10 @@ await c.application?.commands.set([
   shCommand.data.toJSON(),
 factCheckCommand.toJSON(),
 replyMessageCommand.toJSON(),
+summarizeCommand.toJSON(),
+explainCommand.toJSON(),
 ]);
-console.log('✅ Comandos registrados: /sh, Fact-Check, Reply (user-install)');
+console.log('✅ Comandos registrados: /sh, Fact-Check, Reply, Summarize, Explain');
     const appId = c.user.id;
     console.log(
       `🔗 Instala la app: https://discord.com/oauth2/authorize?client_id=${appId}&integration_type=1&scope=applications.commands`,
@@ -71,14 +77,18 @@ client.on(Events.InteractionCreate, async (interaction) => {
  }
  return;
  }
- if (interaction.isMessageContextMenuCommand()) {
- if (interaction.commandName === 'Fact-Check') {
- await handleFactCheck(interaction);
- } else if (interaction.commandName === 'Reply') {
- await handleReplyMessage(interaction);
- }
- return;
- }
+  if (interaction.isMessageContextMenuCommand()) {
+  if (interaction.commandName === 'Fact-Check') {
+  await handleFactCheck(interaction);
+  } else if (interaction.commandName === 'Reply') {
+  await handleReplyMessage(interaction);
+  } else if (interaction.commandName === 'Summarize') {
+  await handleSummarize(interaction);
+  } else if (interaction.commandName === 'Explain') {
+  await handleExplain(interaction);
+  }
+  return;
+  }
  if (interaction.isButton() && interaction.customId.startsWith('make_visible:')) {
  await handleMakeVisible(interaction);
  return;

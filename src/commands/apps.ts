@@ -392,13 +392,25 @@ export async function handleContextModal(interaction: ModalSubmitInteraction): P
 export const factCheckCommand = new ContextMenuCommandBuilder()
   .setName('Fact-Check')
   .setType(ApplicationCommandType.Message)
-  .setIntegrationTypes([ApplicationIntegrationType.UserInstall])
+  .setIntegrationTypes([ApplicationIntegrationType.UserInstall, ApplicationIntegrationType.GuildInstall])
   .setContexts([InteractionContextType.Guild, InteractionContextType.BotDM, InteractionContextType.PrivateChannel]);
 
 export const replyMessageCommand = new ContextMenuCommandBuilder()
   .setName('Reply')
   .setType(ApplicationCommandType.Message)
-  .setIntegrationTypes([ApplicationIntegrationType.UserInstall])
+  .setIntegrationTypes([ApplicationIntegrationType.UserInstall, ApplicationIntegrationType.GuildInstall])
+  .setContexts([InteractionContextType.Guild, InteractionContextType.BotDM, InteractionContextType.PrivateChannel]);
+
+export const summarizeCommand = new ContextMenuCommandBuilder()
+  .setName('Summarize')
+  .setType(ApplicationCommandType.Message)
+  .setIntegrationTypes([ApplicationIntegrationType.UserInstall, ApplicationIntegrationType.GuildInstall])
+  .setContexts([InteractionContextType.Guild, InteractionContextType.BotDM, InteractionContextType.PrivateChannel]);
+
+export const explainCommand = new ContextMenuCommandBuilder()
+  .setName('Explain')
+  .setType(ApplicationCommandType.Message)
+  .setIntegrationTypes([ApplicationIntegrationType.UserInstall, ApplicationIntegrationType.GuildInstall])
   .setContexts([InteractionContextType.Guild, InteractionContextType.BotDM, InteractionContextType.PrivateChannel]);
 
 export async function handleFactCheck(interaction: MessageContextMenuCommandInteraction): Promise<void> {
@@ -407,4 +419,12 @@ export async function handleFactCheck(interaction: MessageContextMenuCommandInte
 
 export async function handleReplyMessage(interaction: MessageContextMenuCommandInteraction): Promise<void> {
   await runContextAction(interaction, 'replyPrompt');
+}
+
+export async function handleSummarize(interaction: MessageContextMenuCommandInteraction): Promise<void> {
+  await runContextAction(interaction, 'summarizePrompt');
+}
+
+export async function handleExplain(interaction: MessageContextMenuCommandInteraction): Promise<void> {
+  await runContextAction(interaction, 'explainPrompt');
 }

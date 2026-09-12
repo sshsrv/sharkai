@@ -1,7 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import type { Language } from './config.js';
 
-export type PendingKind = 'ask' | 'factCheckPrompt' | 'replyPrompt';
+export type PendingKind = 'ask' | 'factCheckPrompt' | 'replyPrompt' | 'summarizePrompt' | 'explainPrompt';
 
 export interface PendingData {
   kind: PendingKind;
