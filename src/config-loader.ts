@@ -4,11 +4,14 @@ import * as yaml from 'yaml';
 
 export type Provider = 'groq' | 'google' | 'openrouter' | 'mistral' | 'opencode';
 
+export type Privacy = 'safe' | 'warn' | 'unsafe';
+
 export interface AIModel {
   id: string;
   name: string;
   provider: Provider;
   description: string;
+  privacy: Privacy;
   tpm: number;
   rpm: number;
   rpd: number;
@@ -46,6 +49,7 @@ export interface ModelConfig {
   name: string;
   provider: Provider;
   description: string;
+  privacy: Privacy;
   tpm: number;
   rpm: number;
   rpd: number;

@@ -41,6 +41,7 @@ models:
     name: GPT-OSS 120B
     provider: groq
     description: "OpenAI open-source model (120B). General purpose, high performance."
+    privacy: safe
     tpm: 8000
     rpm: 1000
     rpd: 1000
@@ -50,6 +51,7 @@ models:
     name: GPT-OSS 20B
     provider: groq
     description: "GPT-OSS 20B. Faster and lighter than the 120B."
+    privacy: safe
     tpm: 8000
     rpm: 1000
     rpd: 1000
@@ -59,6 +61,7 @@ models:
     name: GPT-OSS Safeguard 20B
     provider: groq
     description: "GPT-OSS 20B with safety guardrails (moderation)."
+    privacy: safe
     tpm: 8000
     rpm: 1000
     rpd: 1000
@@ -68,6 +71,7 @@ models:
     name: Qwen 3.6 27B
     provider: groq
     description: "Latest generation Qwen (27B). Great speed/quality balance."
+    privacy: safe
     tpm: 8000
     rpm: 1000
     rpd: 1000
@@ -77,6 +81,7 @@ models:
     name: Qwen 3.8 27B
     provider: groq
     description: "Qwen 3.8 27B. Recent iteration of the Qwen series."
+    privacy: safe
     tpm: 8000
     rpm: 1000
     rpd: 1000
@@ -86,6 +91,7 @@ models:
     name: Groq Compound
     provider: groq
     description: "Groq compound model, advanced multi-step reasoning."
+    privacy: safe
     tpm: 70000
     rpm: 250
     rpd: 250
@@ -95,6 +101,7 @@ models:
     name: Groq Compound Mini
     provider: groq
     description: "Lighter, faster variant of Groq Compound."
+    privacy: safe
     tpm: 70000
     rpm: 250
     rpd: 250
@@ -104,6 +111,7 @@ models:
     name: Gemini 2.5 Flash
     provider: google
     description: "Google Gemini 2.5 Flash. Fast, efficient, strong reasoning for everyday tasks."
+    privacy: unsafe
     tpm: 250000
     rpm: 5
     rpd: 20
@@ -113,6 +121,7 @@ models:
     name: Gemini 2.5 Flash-Lite
     provider: google
     description: "Google Gemini 2.5 Flash-Lite. Cheapest and fastest Gemini model."
+    privacy: unsafe
     tpm: 250000
     rpm: 10
     rpd: 20
@@ -122,6 +131,7 @@ models:
     name: Gemini 3 Flash
     provider: google
     description: "Google Gemini 3 Flash. Latest compact model, great speed/quality balance."
+    privacy: unsafe
     tpm: 250000
     rpm: 5
     rpd: 20
@@ -131,6 +141,7 @@ models:
     name: Gemini 3.1 Flash-Lite
     provider: google
     description: "Google Gemini 3.1 Flash-Lite. Cheap and fast, generous free quota."
+    privacy: unsafe
     tpm: 250000
     rpm: 15
     rpd: 500
@@ -140,6 +151,7 @@ models:
     name: Gemini 3.5 Flash
     provider: google
     description: "Google Gemini 3.5 Flash. High-quality reasoning with fast responses."
+    privacy: unsafe
     tpm: 250000
     rpm: 5
     rpd: 20
@@ -149,6 +161,7 @@ models:
     name: Gemini 3.5 Flash-Lite
     provider: google
     description: "Google Gemini 3.5 Flash-Lite. Fastest and cheapest of the 3.5 line."
+    privacy: unsafe
     tpm: 250000
     rpm: 15
     rpd: 500
@@ -158,6 +171,7 @@ models:
     name: Gemini 3.6 Flash
     provider: google
     description: "Google Gemini 3.6 Flash. Newest compact iteration."
+    privacy: unsafe
     tpm: 250000
     rpm: 5
     rpd: 20
@@ -167,6 +181,7 @@ models:
     name: Gemini 3.7 Flash
     provider: google
     description: "Google Gemini 3.7 Flash. Newest compact iteration."
+    privacy: unsafe
     tpm: 250000
     rpm: 5
     rpd: 20
@@ -176,6 +191,7 @@ models:
     name: Gemini 3.8 Flash
     provider: google
     description: "Google Gemini 3.8 Flash. Latest and most capable compact model."
+    privacy: unsafe
     tpm: 250000
     rpm: 5
     rpd: 20
@@ -185,6 +201,7 @@ models:
     name: Gemma 4 31B
     provider: google
     description: "Google Gemma 4 31B Dense. High-quality open model, completely free."
+    privacy: unsafe
     tpm: 16000
     rpm: 30
     rpd: 14400
@@ -194,6 +211,7 @@ models:
     name: Gemma 4 26B A4B
     provider: google
     description: "Google Gemma 4 26B A4B MoE. Efficient open model, completely free."
+    privacy: unsafe
     tpm: 16000
     rpm: 30
     rpd: 14400
@@ -203,6 +221,7 @@ models:
     name: Mistral Small
     provider: mistral
     description: "Mistral Small. Fast, efficient model with generous free tier."
+    privacy: warn
     tpm: 500000
     rpm: 30
     rpd: 0
@@ -212,6 +231,7 @@ models:
     name: Gemini 2.5 Pro
     provider: google
     description: "Google Gemini 2.5 Pro. High-capability model for complex reasoning and coding."
+    privacy: unsafe
     tpm: 250000
     rpm: 5
     rpd: 100
@@ -221,6 +241,7 @@ models:
     name: Nemotron 3 Ultra
     provider: openrouter
     description: "NVIDIA Nemotron 3 Ultra. 550B MoE, frontier reasoning and orchestration."
+    privacy: warn
     tpm: 260000
     rpm: 20
     rpd: 0
@@ -230,6 +251,7 @@ models:
     name: Nemotron 3.5 Lightning
     provider: openrouter
     description: "NVIDIA Nemotron 3.5 Lightning. Fast 30B MoE, high-throughput agentic workloads."
+    privacy: warn
     tpm: 260000
     rpm: 20
     rpd: 0
@@ -239,6 +261,7 @@ models:
     name: Nemotron 3 Super
     provider: openrouter
     description: "NVIDIA Nemotron 3 Super. 120B MoE, hybrid Mamba-Transformer."
+    privacy: warn
     tpm: 260000
     rpm: 20
     rpd: 0
@@ -248,6 +271,7 @@ models:
     name: Nemotron 3 Nano Omni
     provider: openrouter
     description: "NVIDIA Nemotron 3 Nano Omni. 30B MoE, full multimodal perception."
+    privacy: warn
     tpm: 260000
     rpm: 20
     rpd: 0
@@ -257,6 +281,7 @@ models:
     name: Ling 3.0 Flash Sante
     provider: openrouter
     description: "inclusionAI Ling 3.0 Flash Sante. Health and medicine focused, 124B MoE."
+    privacy: warn
     tpm: 260000
     rpm: 20
     rpd: 0
@@ -266,6 +291,7 @@ models:
     name: Ling 3.0 Flash Fin
     provider: openrouter
     description: "inclusionAI Ling 3.0 Flash Fin. Finance focused, 124B MoE."
+    privacy: warn
     tpm: 260000
     rpm: 20
     rpd: 0
@@ -275,6 +301,7 @@ models:
     name: Ling 3.0 Flash VL
     provider: openrouter
     description: "inclusionAI Ling 3.0 Flash VL. Visual perception and visual agents, 124B MoE."
+    privacy: warn
     tpm: 260000
     rpm: 20
     rpd: 0
@@ -284,6 +311,7 @@ models:
     name: Laguna S 2.1
     provider: openrouter
     description: "Poolside Laguna S 2.1. Coding agent, 118B MoE, high terminal benchmark."
+    privacy: warn
     tpm: 260000
     rpm: 20
     rpd: 0
@@ -293,6 +321,7 @@ models:
     name: Laguna XS 2.1
     provider: openrouter
     description: "Poolside Laguna XS 2.1. Compact coding agent, 33B MoE."
+    privacy: warn
     tpm: 260000
     rpm: 20
     rpd: 0
@@ -302,6 +331,7 @@ models:
     name: North Mini Code
     provider: openrouter
     description: "Cohere North Mini Code. Agentic coding, 30B MoE, Apache 2.0."
+    privacy: warn
     tpm: 260000
     rpm: 20
     rpd: 0
@@ -311,6 +341,7 @@ models:
     name: LFM2.5-2.6B
     provider: openrouter
     description: "LiquidAI LFM2.5-2.6B. Compact reasoning, RAG, data extraction."
+    privacy: warn
     tpm: 260000
     rpm: 20
     rpd: 0
@@ -320,6 +351,7 @@ models:
     name: Dots3-Note Preview
     provider: openrouter
     description: "Dots Studio Dots3-Note. 280B MoE, multimodal reasoning, long context."
+    privacy: warn
     tpm: 260000
     rpm: 20
     rpd: 0
@@ -329,6 +361,7 @@ models:
     name: Nex-N2.5-Mini
     provider: openrouter
     description: "Nex AGI Nex-N2.5-Mini. Agentic coding with visual feedback loop."
+    privacy: warn
     tpm: 260000
     rpm: 20
     rpd: 0
@@ -338,6 +371,7 @@ models:
     name: Nex-N2.5-Pro
     provider: openrouter
     description: "Nex AGI Nex-N2.5-Pro. Autonomous software engineering."
+    privacy: warn
     tpm: 260000
     rpm: 20
     rpd: 0
@@ -347,6 +381,7 @@ models:
     name: Gemma 4 31B
     provider: openrouter
     description: "Google Gemma 4 31B via OpenRouter. Dense multimodal, thinking mode, Apache 2.0."
+    privacy: warn
     tpm: 260000
     rpm: 20
     rpd: 0
@@ -356,6 +391,7 @@ models:
     name: Gemma 4 26B A4B
     provider: openrouter
     description: "Google Gemma 4 26B A4B via OpenRouter. MoE efficient, near-31B quality."
+    privacy: warn
     tpm: 260000
     rpm: 20
     rpd: 0
@@ -365,6 +401,7 @@ models:
     name: Nemotron 3.5 Content Safety
     provider: openrouter
     description: "NVIDIA Nemotron 3.5 Content Safety. Guardrail model for moderation."
+    privacy: warn
     tpm: 260000
     rpm: 20
     rpd: 0
@@ -374,6 +411,7 @@ models:
     name: Free Models Router
     provider: openrouter
     description: "OpenRouter auto-router. Picks the best free model for each request."
+    privacy: warn
     tpm: 200000
     rpm: 20
     rpd: 0
@@ -383,6 +421,7 @@ models:
     name: Mistral Large 3
     provider: mistral
     description: "Mistral Large 3. Frontier quality, 256k context, multimodal."
+    privacy: warn
     tpm: 500000
     rpm: 30
     rpd: 0
@@ -392,6 +431,7 @@ models:
     name: Ministral 3 14B
     provider: mistral
     description: "Ministral 3 14B. Mid-tier model, 256k context, multimodal."
+    privacy: warn
     tpm: 500000
     rpm: 30
     rpd: 0
@@ -401,6 +441,7 @@ models:
     name: Ministral 3 8B
     provider: mistral
     description: "Ministral 3 8B. Fast and efficient, 256k context, multimodal."
+    privacy: warn
     tpm: 500000
     rpm: 30
     rpd: 0
@@ -410,6 +451,7 @@ models:
     name: Ministral 3 3B
     provider: mistral
     description: "Ministral 3 3B. Ultra-lightweight, 256k context, multimodal."
+    privacy: warn
     tpm: 500000
     rpm: 30
     rpd: 0
@@ -419,6 +461,7 @@ models:
     name: Codestral
     provider: mistral
     description: "Codestral. Purpose-built for code generation, 128k context."
+    privacy: warn
     tpm: 500000
     rpm: 30
     rpd: 0
@@ -428,6 +471,7 @@ models:
     name: Muse Spark 1.3 Free
     provider: opencode
     description: "Meta Muse Spark 1.3 via OpenCode. Free tier."
+    privacy: warn
     tpm: 200000
     rpm: 20
     rpd: 0
@@ -437,6 +481,7 @@ models:
     name: Ling 3.0 Flash Fin Free
     provider: opencode
     description: "inclusionAI Ling 3.0 Flash Fin via OpenCode. Finance focused."
+    privacy: warn
     tpm: 200000
     rpm: 20
     rpd: 0
@@ -446,6 +491,7 @@ models:
     name: Nemotron 3.5 Lightning Free
     provider: opencode
     description: "NVIDIA Nemotron 3.5 Lightning via OpenCode. Fast 30B MoE."
+    privacy: warn
     tpm: 200000
     rpm: 20
     rpd: 0
@@ -455,6 +501,7 @@ models:
     name: Muse Spark 1.2 Free
     provider: opencode
     description: "Meta Muse Spark 1.2 via OpenCode. Free tier."
+    privacy: warn
     tpm: 200000
     rpm: 20
     rpd: 0
@@ -464,6 +511,7 @@ models:
     name: Nemotron 3 Ultra Free
     provider: opencode
     description: "NVIDIA Nemotron 3 Ultra via OpenCode. 550B MoE."
+    privacy: warn
     tpm: 200000
     rpm: 20
     rpd: 0
@@ -473,6 +521,7 @@ models:
     name: MiMo V2.5 Free
     provider: opencode
     description: "Xiaomi MiMo V2.5 via OpenCode. Free tier."
+    privacy: warn
     tpm: 200000
     rpm: 20
     rpd: 0
@@ -482,6 +531,7 @@ models:
     name: Big Pickle
     provider: opencode
     description: "Big Pickle via OpenCode. Stealth model."
+    privacy: warn
     tpm: 200000
     rpm: 20
     rpd: 0

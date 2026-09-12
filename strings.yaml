@@ -26,47 +26,35 @@ commands:
             description: "True = visible for everyone (default). False = only you (ephemeral)"
             type: 5
             required: false
-      model:
-        description: "View or change your default model"
+      set:
+        description: "Set your model, prompt, or both"
         options:
           model:
-            description: "Model (omitting shows the current one)"
+            description: "Default model (autocomplete)"
             type: 3
             required: false
-            choices:
-          info:
-            description: "Show model limits (default: true)"
-            type: 5
-            required: false
-      prompt:
-        description: "View or change your custom system prompt"
-        options:
-          text:
-            description: "New custom prompt (used instead of the default)"
+          prompt:
+            description: "Custom system prompt (empty string to reset)"
             type: 3
-            required: false
-          clear:
-            description: "Go back to the default prompt"
-            type: 5
             required: false
       language:
-        description: "Language of bot UI and AI answers"
+        description: "UI language (AI always answers in your language)"
         options:
           language:
             description: "Language"
             type: 3
-            required: false
+            required: true
             choices:
               en: English
               es: Español
+      models:
+        description: "List all models with usage and privacy info"
+        options: {}
       usage:
-        description: "Show your shared usage and live limits"
+        description: "Show detailed usage of your current model"
         options: {}
       clear:
         description: "Clear your conversation history (start fresh context)"
-        options: {}
-      status:
-        description: "Show your current configuration"
         options: {}
       reset:
         description: "Reset all your settings to defaults"
@@ -80,36 +68,31 @@ responses:
     error: 'Error: {{0}}'
     factCheckPrompt: "You are an expert fact-checker. Analyze the following message and produce a structured fact-check.\n\nYour response MUST use exactly these 3 sections as markdown headings, in this order:\n\n## Verdict\nStart with one colored circle emoji and its label (🟢 True, 🟡 Misleading, 🟠 Half-true, 🔴 False, ⚪ Uncertain),\nthen the concise one-line summary as a single bullet point on the next line, starting with \"- \".\n\n## Analysis\nDetailed reasoning, evidence, and context. Be concise but thorough.\n\n## Sources\nList sources as bullet points. Every source MUST include a URL link. If no specific source, state your reasoning basis.\n\nDo NOT add any text outside these 3 sections.\nSeparate the three sections with a single line break — no empty lines between sections, and no empty line directly after a heading.\nDo NOT include 'Claim:' or any prefix before the user message — the user message will be displayed separately above your response.\n\nMessage to fact-check:\n> {{0}}"
     replyPrompt: 'You are a helpful assistant. Reply to the following message directly and concisely. Don''t start with AI-like preambles. Don''t ask clarifying questions — just give the best answer you can.\n\nMessage to reply to:\n> {{0}}'
-    langRule: 'You MUST respond in English, no matter what language the user writes in. Never follow the language of the question.'
-    makeVisible: '👁 Make Visible'
-    addContext: '✏️ Add Context'
+    makeVisible: 'Make Visible'
+    addContext: 'Add Context'
     contextModalTitle: 'Add Context'
     contextModalLabel: 'Additional context for the AI'
     contextModalPlaceholder: 'Add any missing context, corrections, or details...'
     contextThinking: '{{0}} is thinking…'
     contextResult: '{{0}} result'
     factCheckLabel: 'Fact-Check'
-    h1LanguageSet: 'Language set'
-    h1ModelCurrent: 'Your current model'
-    h1ModelUpdated: 'Default model updated'
+    h1LanguageSet: 'Language set to {{0}}'
+    h1SetModel: 'Default model set to {{0}}'
+    h1SetPrompt: 'Custom prompt saved'
+    h1SetBoth: 'Default model set to {{0}} · Custom prompt saved'
+    h1SetShow: 'Your current settings'
     h1Clear: 'Conversation cleared'
-    h1PromptCleared: 'Prompt reset'
-    h1PromptCurrent: 'Your current prompt'
-    h1PromptEmpty: 'No custom prompt'
-    h1PromptUpdated: 'Custom prompt saved'
     h1Reset: 'Settings reset'
-    h1Status: 'Your SharkAI configuration'
     invalidLanguage: 'Invalid language.'
     invalidModel: 'Invalid model: `{{0}}`'
-    noPrompt: "(default)"
-    promptHint: 'Use `/sh prompt text:...` to change it, `/sh prompt clear:true` to reset.'
-    resetBody: "Model: {{0}}\nPrompt: default\nLanguage: English"
-    statusContext: 'Context'
-    statusContextMsgs: 'messages'
-    statusLanguage: 'Language'
-    statusModel: 'Model'
-    statusPrompt: 'Prompt'
+    resetBody: "Model: {{0}}\nPrompt: {{1}}\nLanguage: {{2}}"
     unknownSub: 'Unknown subcommand.'
+    modelsTitle: 'All Models'
+    modelsShared: "Shared daily usage (same API quota)"
+    modelsLegendTitle: 'Shield legend'
+    privacySafe: 'Private'
+    privacyWarn: 'Data-retention'
+    privacyUnsafe: 'Data used for training'
     usageError: 'Could not fetch limits: {{0}}'
     usageLive: 'Live limits'
     usageRequestsTag: 'requests'
@@ -117,9 +100,9 @@ responses:
     usageShared: "Shared across all models (same API quota)"
     usageTitle: 'Usage'
     usageTokensTag: 'TPM'
-    askButton: '💬 Ask'
-    copyButton: '📋 Copy'
-    regenButton: '🔄 Regen'
+    askButton: 'Ask'
+    copyButton: 'Copy'
+    regenButton: 'Regen'
     notAuthor: 'Only the author can use this button.'
     askModalTitle: 'Ask a follow-up'
     askModalLabel: 'Your question'
@@ -131,36 +114,31 @@ responses:
     error: 'Error: {{0}}'
     factCheckPrompt: "Eres un experto en verificación de hechos. Analiza el siguiente mensaje y produce una verificación estructurada.\n\nTu respuesta DEBE usar exactamente estas 3 secciones como encabezados de markdown, en este orden:\n\n## Veredicto\nEmpieza con un emoji de círculo de color y su etiqueta (🟢 Verdadero, 🟡 Engañoso, 🟠 A medias, 🔴 Falso, ⚪ Incierto),\ny después el resumen conciso de una línea como una única viñeta en la línea siguiente, que empieza con \"- \".\n\n## Análisis\nRazonamiento detallado, evidencia y contexto. Sé conciso pero exhaustivo.\n\n## Fuentes\nLista las fuentes como viñetas. TODAS las fuentes DEBEN incluir un enlace URL. Si no hay fuente específica, indica la base de tu razonamiento.\n\nNO añadas texto fuera de estas 3 secciones.\nSepara las tres secciones con un único salto de línea — sin líneas vacías entre secciones, y sin línea vacía justo después de un encabezado.\nNO incluyas 'Claim:' ni ningún prefijo antes del mensaje del usuario — el mensaje del usuario se mostrará separado arriba de tu respuesta.\n\nMensaje a verificar:\n> {{0}}"
     replyPrompt: 'Eres un asistente útil. Responde al siguiente mensaje de forma directa y concisa. No empieces con preámbulos tipo IA. No hagas preguntas de clarificación — simplemente da la mejor respuesta que puedas.\n\nMensaje al que responder:\n> {{0}}'
-    langRule: 'SIEMPRE debes responder en español, sin importar en qué idioma escriba el usuario. Nunca respondas en el idioma de la pregunta.'
-    makeVisible: '👁 Hacer visible'
-    addContext: '✏️ Añadir contexto'
+    makeVisible: 'Hacer visible'
+    addContext: 'Añadir contexto'
     contextModalTitle: 'Añadir contexto'
     contextModalLabel: 'Contexto adicional para la IA'
     contextModalPlaceholder: 'Añade contexto, correcciones o detalles que falten...'
     contextThinking: '{{0}} está pensando…'
     contextResult: 'Resultado de {{0}}'
     factCheckLabel: 'Verificación de hechos'
-    h1LanguageSet: 'Idioma configurado'
-    h1ModelCurrent: 'Tu modelo por defecto'
-    h1ModelUpdated: 'Modelo por defecto actualizado'
+    h1LanguageSet: 'Idioma configurado: {{0}}'
+    h1SetModel: 'Modelo por defecto configurado: {{0}}'
+    h1SetPrompt: 'Prompt personalizado guardado'
+    h1SetBoth: 'Modelo por defecto configurado: {{0}} · Prompt personalizado guardado'
+    h1SetShow: 'Tus ajustes actuales'
     h1Clear: 'Conversación borrada'
-    h1PromptCleared: 'Prompt restablecido'
-    h1PromptCurrent: 'Tu prompt actual'
-    h1PromptEmpty: 'Sin prompt personalizado'
-    h1PromptUpdated: 'Prompt personalizado guardado'
     h1Reset: 'Ajustes reiniciados'
-    h1Status: 'Tu configuración de SharkAI'
     invalidLanguage: 'Idioma no válido.'
     invalidModel: 'Modelo no válido: `{{0}}`'
-    noPrompt: "(por defecto)"
-    promptHint: 'Usa `/sh prompt text:...` para cambiarlo, `/sh prompt clear:true` para resetear.'
-    resetBody: "Modelo: {{0}}\nPrompt: por defecto\nIdioma: Español"
-    statusContext: 'Contexto'
-    statusContextMsgs: 'mensajes'
-    statusLanguage: 'Idioma'
-    statusModel: 'Modelo'
-    statusPrompt: 'Prompt'
+    resetBody: "Modelo: {{0}}\nPrompt: {{1}}\nIdioma: {{2}}"
     unknownSub: 'Subcomando desconocido.'
+    modelsTitle: 'Todos los modelos'
+    modelsShared: "Uso diario compartido (misma cuota de API)"
+    modelsLegendTitle: 'Leyenda de escudos'
+    privacySafe: 'Privado'
+    privacyWarn: 'Retención de datos'
+    privacyUnsafe: 'Datos usados para entrenamiento'
     usageError: 'No pude consultar los límites: {{0}}'
     usageLive: 'Límites en vivo'
     usageRequestsTag: 'peticiones'
@@ -168,9 +146,9 @@ responses:
     usageShared: "Compartido entre todos los modelos (misma cuota de API)"
     usageTitle: 'Uso'
     usageTokensTag: 'TPM'
-    askButton: '💬 Preguntar'
-    copyButton: '📋 Copiar'
-    regenButton: '🔄 Regenerar'
+    askButton: 'Preguntar'
+    copyButton: 'Copiar'
+    regenButton: 'Regenerar'
     notAuthor: 'Solo el autor puede usar este botón.'
     askModalTitle: 'Pregunta de seguimiento'
     askModalLabel: 'Tu pregunta'

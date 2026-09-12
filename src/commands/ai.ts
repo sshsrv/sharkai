@@ -7,15 +7,13 @@ import {
 } from 'discord.js';
 import {
 	MODELS,
-	DEFAULT_MODEL,
 	CHAT_MODEL_IDS,
 	MODEL_EMOJI,
+	PROVIDER_LABEL,
+	PRIVACY_SHIELD,
 	type Language,
 	LANGUAGE_CHOICES,
 	languageLabel,
-	formatLimits,
-	PROVIDER_LABEL,
-	type AIModel,
 } from '../config.js';
 import {
 	getModel,
@@ -24,12 +22,11 @@ import {
 	setPrompt,
 	getLanguage,
 	setLanguage,
-	getHistory,
 	appendHistory,
 	clearHistory,
 	resetUser,
 } from '../store.js';
-import { ask, fetchGroqUsage, refreshGroqLimits, getObservedLimits } from '../providers.js';
+import { ask, fetchGroqUsage, getObservedLimits } from '../providers.js';
 import { recordRequest, getModelUsage } from '../usage.js';
 import { t } from '../strings.js';
 import {
@@ -43,7 +40,7 @@ import {
 	box,
 } from '../components.js';
 import { genId, getPendingData, setPendingData } from '../pending.js';
-import { renderComponents, cleanAnswer } from '../render.js';
+import { renderComponents } from '../render.js';
 
 
 
@@ -76,11 +73,6 @@ function boxTitle(title: string): V2Component {
 }
 
 
-function hint(content: string): V2Component {
-	return text(`-# ${content}`);
-}
-
-
 function fmtK(n: number | null | undefined): string {
 	if (n === null || n === undefined) return '?';
 	if (n >= 1000) return `${(n / 1000).toFixed(1).replace(/\.0$/, '')}K`;
@@ -90,14 +82,15 @@ function fmtK(n: number | null | undefined): string {
 
 export function footer(emoji: string | undefined, model: string, used: number, limit: number): string {
 	const e = emoji ? `${emoji} ` : '';
-	return `-# ${e}${model}・${used}/${limit} daily・Results are AI generated`;
+	const usage = limit === 0 ? '∞/∞' : `${used}/${limit}`;
+	return `-# ${e}${model}・${usage} daily・Results are AI generated`;
 }
 
 export const shCommand = {
 	data: new SlashCommandBuilder()
 		.setName('sh')
 		.setDescription('SharkAI: all-in-one AI assistant')
-		
+
 		.setIntegrationTypes([ApplicationIntegrationType.UserInstall])
 		.setContexts([InteractionContextType.BotDM, InteractionContextType.PrivateChannel])
 		.addSubcommand((s) =>
@@ -124,39 +117,24 @@ export const shCommand = {
 		)
 		.addSubcommand((s) =>
 			s
-				.setName('use')
-				.setDescription('View or change your default model')
+				.setName('set')
+				.setDescription('Set your model, prompt, or both')
 			.addStringOption((o) =>
 				o
 					.setName('model')
-					.setDescription('Model (omitting shows the current one)')
+					.setDescription('Default model (autocomplete)')
 					.setAutocomplete(true),
 			)
-				.addBooleanOption((o) =>
-					o
-						.setName('info')
-						.setDescription('Show model limits (default: true)'),
-				),
-		)
-		.addSubcommand((s) =>
-			s
-				.setName('prompt')
-				.setDescription('View or change your custom system prompt')
 				.addStringOption((o) =>
 					o
-						.setName('text')
-						.setDescription('New custom prompt (used instead of the default)'),
-				)
-				.addBooleanOption((o) =>
-					o
-						.setName('clear')
-						.setDescription('Go back to the default prompt'),
+						.setName('prompt')
+						.setDescription('Custom system prompt (empty string to reset)'),
 				),
 		)
 		.addSubcommand((s) =>
 			s
 				.setName('language')
-				.setDescription('Language of bot UI and AI answers')
+				.setDescription('UI language (AI always answers in your language)')
 				.addStringOption((o) =>
 					o
 						.setName('language')
@@ -165,9 +143,9 @@ export const shCommand = {
 						.addChoices(...LANGUAGE_CHOICES),
 				),
 		)
-		.addSubcommand((s) => s.setName('models').setDescription('Show your shared usage and live limits'))
+		.addSubcommand((s) => s.setName('models').setDescription('List all models with usage and privacy info'))
+		.addSubcommand((s) => s.setName('usage').setDescription('Show detailed usage of your current model'))
 		.addSubcommand((s) => s.setName('clear').setDescription('Clear your conversation history (start fresh context)'))
-		.addSubcommand((s) => s.setName('status').setDescription('Show your current configuration'))
 		.addSubcommand((s) => s.setName('reset').setDescription('Reset all your settings to defaults')),
 
 	async execute(interaction: ChatInputCommandInteraction | AutocompleteInteraction): Promise<void> {
@@ -189,23 +167,20 @@ export const shCommand = {
 			case 'ask':
 				await handleAsk(interaction);
 				break;
-			case 'use':
-				await handleModel(interaction);
-				break;
-			case 'prompt':
-				await handlePrompt(interaction);
+			case 'set':
+				await handleSet(interaction);
 				break;
 			case 'language':
 				await handleLanguage(interaction);
 				break;
 			case 'models':
+				await handleModels(interaction);
+				break;
+			case 'usage':
 				await handleUsage(interaction);
 				break;
 			case 'clear':
 				await handleClear(interaction);
-				break;
-			case 'status':
-				await handleStatus(interaction);
 				break;
 			case 'reset':
 				await handleReset(interaction);
@@ -294,100 +269,65 @@ async function handleAsk(interaction: ChatInputCommandInteraction): Promise<void
 }
 
 
-async function modelInfoText(m: AIModel): Promise<string> {
-	let info = formatLimits(m);
-	if (m.provider === 'groq') {
-		const live = await refreshGroqLimits(m.id);
-		if (live?.limitRequests) {
-			info +=
-				`\nLive now: \`${live.remainingRequests ?? '?'}/${live.limitRequests}\` RPM · ` +
-				`\`${fmtK(live.remainingTokens)}/${fmtK(live.limitTokens)}\` TPM` +
-				(live.resetRequests ? ` · reset ${live.resetRequests}` : '');
-		}
-	} else if (m.provider === 'google') {
-		info += '\nLimits from Google free-tier (published quota; captured live from API on 429).';
-	} else {
-		info += `\nLimits from ${PROVIDER_LABEL[m.provider] ?? m.provider} free tier.`;
-	}
-	return info;
-}
-
-async function handleModel(interaction: ChatInputCommandInteraction): Promise<void> {
+async function handleSet(interaction: ChatInputCommandInteraction): Promise<void> {
 	const lang = getLanguage(interaction.user.id);
-	const override = interaction.options.getString('model');
-	const showInfo = interaction.options.getBoolean('info') ?? true;
+	const modelArg = interaction.options.getString('model');
+	const promptArg = interaction.options.getString('prompt');
 
-	if (override) {
-		const m = MODELS[override];
-		if (!m) {
-			await replyComponents(interaction, [text(t(lang, 'invalidModel', override))], {
-				ephemeral: true,
-			});
-			return;
-		}
-		setModel(interaction.user.id, override);
-
+	if (!modelArg && promptArg === null) {
+		const currentModel = getModel(interaction.user.id);
+		const currentPrompt = getPrompt(interaction.user.id);
+		const m = MODELS[currentModel];
+		const promptDisplay = currentPrompt ? currentPrompt.slice(0, 200) : t(lang, 'noPrompt');
 		const components: V2Component[] = [
 			box([
-				boxTitle(t(lang, 'h1ModelUpdated', `${m.name} (\`${override}\`)`)),
-				...(showInfo ? [separator(), text(await modelInfoText(m))] : []),
+				boxTitle(t(lang, 'h1SetShow')),
+				separator(),
+				text(
+					`**Model:** ${m?.name ?? currentModel} (\`${currentModel}\`)\n` +
+					`**Prompt:** ${promptDisplay}`
+				),
 			]),
 		];
 		await replyComponents(interaction, components, { ephemeral: true });
 		return;
 	}
 
-	
-	const current = getModel(interaction.user.id);
-	const m = MODELS[current];
+	const updates: string[] = [];
+
+	if (modelArg) {
+		const m = MODELS[modelArg];
+		if (!m) {
+			await replyComponents(interaction, [text(t(lang, 'invalidModel', modelArg))], {
+				ephemeral: true,
+			});
+			return;
+		}
+		setModel(interaction.user.id, modelArg);
+		updates.push('model');
+	}
+
+	if (promptArg !== null) {
+		setPrompt(interaction.user.id, promptArg.trim());
+		updates.push('prompt');
+	}
+
+	const model = getModel(interaction.user.id);
+	const m = MODELS[model];
+
+	let key: string;
+	if (updates.length === 2) {
+		key = 'h1SetBoth';
+	} else if (updates.includes('model')) {
+		key = 'h1SetModel';
+	} else {
+		key = 'h1SetPrompt';
+	}
+
 	const components: V2Component[] = [
-		box([
-			boxTitle(t(lang, 'h1ModelCurrent', `${m.name} (\`${current}\`)`)),
-			...(showInfo ? [separator(), text(await modelInfoText(m))] : []),
-		]),
+		box([boxTitle(t(lang, key, m?.name ?? model))]),
 	];
 	await replyComponents(interaction, components, { ephemeral: true });
-}
-
-async function handlePrompt(interaction: ChatInputCommandInteraction): Promise<void> {
-	const lang = getLanguage(interaction.user.id);
-	const textArg = interaction.options.getString('text');
-	const clear = interaction.options.getBoolean('clear') ?? false;
-
-	if (clear) {
-		setPrompt(interaction.user.id, '');
-		await replyComponents(interaction, [box([boxTitle(t(lang, 'h1PromptCleared'))])], {
-			ephemeral: true,
-		});
-		return;
-	}
-
-	if (textArg) {
-		setPrompt(interaction.user.id, textArg.trim());
-		await replyComponents(
-			interaction,
-			[box([boxTitle(t(lang, 'h1PromptUpdated')), separator(), hint(t(lang, 'promptHint'))])],
-			{ ephemeral: true },
-		);
-		return;
-	}
-
-	
-	const current = getPrompt(interaction.user.id);
-	if (current) {
-		await replyComponents(
-			interaction,
-			[
-				box([boxTitle(t(lang, 'h1PromptCurrent', current))]),
-				separator(),
-				hint(t(lang, 'promptHint'))],
-			{ ephemeral: true },
-		);
-	} else {
-		await replyComponents(interaction, [box([boxTitle(t(lang, 'h1PromptEmpty'))])], {
-			ephemeral: true,
-		});
-	}
 }
 
 async function handleLanguage(interaction: ChatInputCommandInteraction): Promise<void> {
@@ -404,9 +344,8 @@ async function handleLanguage(interaction: ChatInputCommandInteraction): Promise
 	});
 }
 
-async function handleUsage(interaction: ChatInputCommandInteraction): Promise<void> {
+async function handleModels(interaction: ChatInputCommandInteraction): Promise<void> {
 	const lang = getLanguage(interaction.user.id);
-	const model = getModel(interaction.user.id);
 	await deferComponents(interaction, { ephemeral: true });
 
 	try {
@@ -436,9 +375,9 @@ async function handleUsage(interaction: ChatInputCommandInteraction): Promise<vo
 		];
 
 		const inner: V2Component[] = [
-			boxTitle(t(lang, 'usageTitle')),
+			boxTitle(t(lang, 'modelsTitle')),
 			separator(),
-			text(`## ${t(lang, 'usageShared')}`),
+			text(`## ${t(lang, 'modelsShared')}`),
 		];
 
 		for (const { key, label } of providerOrder) {
@@ -455,36 +394,67 @@ async function handleUsage(interaction: ChatInputCommandInteraction): Promise<vo
 			const pEmoji = providerEmoji[key] ?? '';
 			const modelLines = sorted.map(m => {
 				const e = modelEmoji(m.id);
-				const pfx = e ? `${e} ` : '';
+				const shield = PRIVACY_SHIELD[MODELS[m.id].privacy];
 				const usage = m.limit === 0 ? '∞/∞' : `${m.used}/${m.limit}`;
-				return `- ${pfx}${MODELS[m.id].name}: \`${usage}\``;
+				return `- ${shield}・${e} ${MODELS[m.id].name} \`${usage}\``;
 			}).join('\n');
 
 			inner.push(separator());
 			inner.push(text(`### ${pEmoji} ${label}\n${modelLines}`));
 		}
 
-		const groqModel = MODELS[model]?.provider === 'groq' ? model : Object.values(MODELS).find(m => m.provider === 'groq')?.id ?? model;
-		const rl = await fetchGroqUsage(groqModel);
-		const resetRequests = rl.resetRequests ? `\`${rl.resetRequests}\`` : '?';
-		const resetTokens = rl.resetTokens ? `\`${rl.resetTokens}\`` : '?';
-
 		inner.push(separator());
 		inner.push(text(
-			`## ${t(lang, 'usageLive')} · ${MODELS[groqModel]?.name ?? groqModel} (${PROVIDER_LABEL[MODELS[groqModel]?.provider ?? 'groq']})\n` +
-			`\`${rl.remainingRequests ?? '?'}/${rl.limitRequests ?? '?'}\` ${t(lang, 'usageRequestsTag')} · ` +
-			`${t(lang, 'usageReset')} ${resetRequests}\n` +
-			`\`${fmtK(rl.remainingTokens)}/${fmtK(rl.limitTokens)}\` ${t(lang, 'usageTokensTag')} · ` +
-			`${t(lang, 'usageReset')} ${resetTokens}`,
+			`**${t(lang, 'modelsLegendTitle')}**\n` +
+			`${PRIVACY_SHIELD.safe} ${t(lang, 'privacySafe')} · ` +
+			`${PRIVACY_SHIELD.warn} ${t(lang, 'privacyWarn')} · ` +
+			`${PRIVACY_SHIELD.unsafe} ${t(lang, 'privacyUnsafe')}`
 		));
 
-		if (MODELS[model]?.provider === 'google') {
+		await editComponents(interaction, [box(inner)]);
+	} catch (err) {
+		const message = err instanceof Error ? err.message : String(err);
+		await editComponents(interaction, [text(t(lang, 'usageError', message))]);
+	}
+}
+
+async function handleUsage(interaction: ChatInputCommandInteraction): Promise<void> {
+	const lang = getLanguage(interaction.user.id);
+	const model = getModel(interaction.user.id);
+	await deferComponents(interaction, { ephemeral: true });
+
+	try {
+		const m = MODELS[model];
+		const mu = getModelUsage(model);
+		const usage = mu.limit === 0 ? '∞/∞' : `${mu.used}/${mu.limit}`;
+
+		const inner: V2Component[] = [
+			boxTitle(t(lang, 'usageTitle')),
+			separator(),
+			text(`**${m?.name ?? model}** (\`${model}\`)`),
+			text(`Usage: \`${usage}\` daily`),
+		];
+
+		if (m?.provider === 'groq') {
+			const rl = await fetchGroqUsage(model);
+			const resetRequests = rl.resetRequests ? `\`${rl.resetRequests}\`` : '?';
+			const resetTokens = rl.resetTokens ? `\`${rl.resetTokens}\`` : '?';
+
+			inner.push(separator());
+			inner.push(text(
+				`## ${t(lang, 'usageLive')} · ${m.name}\n` +
+				`\`${rl.remainingRequests ?? '?'}/${rl.limitRequests ?? '?'}\` ${t(lang, 'usageRequestsTag')} · ` +
+				`${t(lang, 'usageReset')} ${resetRequests}\n` +
+				`\`${fmtK(rl.remainingTokens)}/${fmtK(rl.limitTokens)}\` ${t(lang, 'usageTokensTag')} · ` +
+				`${t(lang, 'usageReset')} ${resetTokens}`,
+			));
+		} else if (m?.provider === 'google') {
 			const goog = getObservedLimits(model);
 			if (goog?.limitRequests || goog?.limitTokens) {
 				inner.push(
 					separator(),
 					text(
-						`## ${t(lang, 'usageLive')} · ${MODELS[model]?.name ?? model} (${PROVIDER_LABEL[MODELS[model]?.provider ?? 'google']})\n` +
+						`## ${t(lang, 'usageLive')} · ${m.name}\n` +
 						(goog.limitRequests !== null
 							? `\`${goog.remainingRequests ?? '?'}/${goog.limitRequests}\` ${t(lang, 'usageRequestsTag')}\n`
 							: '') +
@@ -492,6 +462,9 @@ async function handleUsage(interaction: ChatInputCommandInteraction): Promise<vo
 					),
 				);
 			}
+		} else {
+			inner.push(separator());
+			inner.push(text(`Limits from ${PROVIDER_LABEL[m?.provider ?? 'opencode'] ?? m?.provider} free tier.`));
 		}
 
 		await editComponents(interaction, [box(inner)]);
@@ -507,34 +480,16 @@ async function handleClear(interaction: ChatInputCommandInteraction): Promise<vo
 	await replyComponents(interaction, [box([boxTitle(t(lang, 'h1Clear'))])], { ephemeral: true });
 }
 
-async function handleStatus(interaction: ChatInputCommandInteraction): Promise<void> {
-	const lang = getLanguage(interaction.user.id);
-	const model = getModel(interaction.user.id);
-	const prompt = getPrompt(interaction.user.id);
-	const language = getLanguage(interaction.user.id);
-
-	const components: V2Component[] = [
-		box([
-			boxTitle(t(lang, 'h1Status')),
-			separator(),
-			text(
-				`## ${t(lang, 'statusModel')} ${MODELS[model]?.name ?? model} (\`${model}\`)\n` +
-					`## ${t(lang, 'statusLanguage')} ${languageLabel(language)}\n` +
-					`## ${t(lang, 'statusPrompt')} ${prompt ? `${prompt.slice(0, 500)}` : t(lang, 'noPrompt')}\n` +
-					`## ${t(lang, 'statusContext')} ${getHistory(interaction.user.id).length} ${t(lang, 'statusContextMsgs')}`,
-			),
-		]),
-	];
-	await replyComponents(interaction, components, { ephemeral: true });
-}
-
 async function handleReset(interaction: ChatInputCommandInteraction): Promise<void> {
 	const lang = getLanguage(interaction.user.id);
+	const language = getLanguage(interaction.user.id);
 	resetUser(interaction.user.id);
 	const model = getModel(interaction.user.id);
+	const prompt = getPrompt(interaction.user.id);
+	const promptDisplay = prompt || t(lang, 'noPrompt');
 	await replyComponents(
 		interaction,
-		[box([boxTitle(t(lang, 'h1Reset')), separator(), text(t(lang, 'resetBody', model))])],
+		[box([boxTitle(t(lang, 'h1Reset')), separator(), text(t(lang, 'resetBody', model, promptDisplay, languageLabel(language)))])],
 		{ ephemeral: true },
 	);
 }

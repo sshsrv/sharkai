@@ -2,7 +2,6 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { env, MODELS, DEFAULT_MODEL, DEFAULT_PROMPT_EN, DEFAULT_PROMPT_ES, AI_TEMPERATURE, AI_MAX_TOKENS, type Provider } from './config.js';
 import { getModel, getPrompt, getLanguage, getHistory } from './store.js';
-import { t } from './strings.js';
 
 const GROQ_ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions';
 const GOOGLE_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models';
@@ -296,11 +295,9 @@ async function googleComplete(
 
 
 function buildSystemPrompt(userId: string): string {
-	const lang = getLanguage(userId);
 	const custom = getPrompt(userId);
-const langRule = t(lang, 'langRule');
-const base = custom||(lang === 'en' ? DEFAULT_PROMPT_EN : DEFAULT_PROMPT_ES);
-return `${langRule}\n\n${base}`;
+	const lang = getLanguage(userId);
+	return custom || (lang === 'en' ? DEFAULT_PROMPT_EN : DEFAULT_PROMPT_ES);
 }
 
 function buildMessages(userId: string, question: string): ChatMessage[] {

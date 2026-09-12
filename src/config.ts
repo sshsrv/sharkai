@@ -1,7 +1,7 @@
 import 'dotenv/config';
-import { loadConfig, type AppConfig, type AIModel, type Provider, type Language, type ModelEmojiMap } from './config-loader.js';
+import { loadConfig, type AppConfig, type AIModel, type Provider, type Language, type ModelEmojiMap, type Privacy } from './config-loader.js';
 
-export type { Provider, AIModel, Language };
+export type { Provider, AIModel, Language, Privacy };
 
 const raw: AppConfig | null = loadConfig();
 
@@ -29,6 +29,7 @@ export const MODELS: Record<string, AIModel> = raw
           name: m.name,
           provider: m.provider as Provider,
           description: m.description,
+          privacy: m.privacy ?? 'warn',
           tpm: m.tpm,
           rpm: m.rpm,
           rpd: m.rpd,
@@ -42,6 +43,18 @@ export const MODELS: Record<string, AIModel> = raw
 export const CHAT_MODEL_IDS = Object.keys(MODELS);
 
 export const MODEL_EMOJI: ModelEmojiMap = (raw?.model_emojis as ModelEmojiMap) ?? {} as ModelEmojiMap;
+
+export const PRIVACY_SHIELD: Record<Privacy, string> = {
+  safe: '<:safe:1548014824355537007>',
+  warn: '<:warn:1548014838213775542>',
+  unsafe: '<:unsafe:1548014850364407919>',
+};
+
+export const PRIVACY_LABEL: Record<Privacy, string> = {
+  safe: 'Private',
+  warn: 'Data-retention',
+  unsafe: 'Data used for training',
+};
 
 export const DEFAULT_MODEL: string = raw?.bot?.default_model ?? 'openai/gpt-oss-120b';
 
