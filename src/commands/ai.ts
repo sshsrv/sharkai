@@ -377,7 +377,7 @@ async function handleModels(interaction: ChatInputCommandInteraction): Promise<v
 			{ key: 'opencode', label: PROVIDER_LABEL['opencode'] ?? 'OpenCode' },
 		];
 
-		const legendText = `-# ${PRIVACY_SHIELD.safe} Private · ${PRIVACY_SHIELD.warn} Data-retention · ${PRIVACY_SHIELD.unsafe} Training`;
+		const legendText = `-# ${PRIVACY_SHIELD.safe} Private ・ ${PRIVACY_SHIELD.warn} Data-retention ・ ${PRIVACY_SHIELD.unsafe} Training`;
 
 		const providerBlocks: Array<{ header: string; models: string }> = [];
 		for (const { key, label } of providerOrder) {
@@ -482,10 +482,10 @@ async function handleUsage(interaction: ChatInputCommandInteraction): Promise<vo
 
 				inner.push(separator());
 				inner.push(text(
-					`## ${t(lang, 'usageLive')} · ${m.name}\n` +
-					`\`${rl.remainingRequests ?? '?'}/${rl.limitRequests ?? '?'}\` ${t(lang, 'usageRequestsTag')} · ` +
+					`## ${t(lang, 'usageLive')} ・ ${m.name}\n` +
+					`\`${rl.remainingRequests ?? '?'}/${rl.limitRequests ?? '?'}\` ${t(lang, 'usageRequestsTag')} ・ ` +
 					`${t(lang, 'usageReset')} ${resetRequests}\n` +
-					`\`${fmtK(rl.remainingTokens)}/${fmtK(rl.limitTokens)}\` ${t(lang, 'usageTokensTag')} · ` +
+					`\`${fmtK(rl.remainingTokens)}/${fmtK(rl.limitTokens)}\` ${t(lang, 'usageTokensTag')} ・ ` +
 					`${t(lang, 'usageReset')} ${resetTokens}`,
 				));
 			} catch {
@@ -498,7 +498,7 @@ async function handleUsage(interaction: ChatInputCommandInteraction): Promise<vo
 				inner.push(
 					separator(),
 					text(
-						`## ${t(lang, 'usageLive')} · ${m.name}\n` +
+						`## ${t(lang, 'usageLive')} ・ ${m.name}\n` +
 						(goog.limitRequests !== null
 							? `\`${goog.remainingRequests ?? '?'}/${goog.limitRequests}\` ${t(lang, 'usageRequestsTag')}\n`
 							: '') +

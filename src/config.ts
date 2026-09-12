@@ -87,7 +87,7 @@ export const env = {
 };
 
 export function formatLimits(m: AIModel): string {
-  return `${m.description}\nProvider: \`${PROVIDER_LABEL[m.provider]}\`\nContext: \`${m.context.toLocaleString()}\` tokens\nFree-plan limits: \`${m.tpm.toLocaleString()}\` TPM · \`${m.rpm}\` RPM · \`${m.rpd.toLocaleString()}\` RPD`;
+  return `${m.description}\nProvider: \`${PROVIDER_LABEL[m.provider]}\`\nContext: \`${m.context.toLocaleString()}\` tokens\nFree-plan limits: \`${m.tpm.toLocaleString()}\` TPM ・ \`${m.rpm}\` RPM ・ \`${m.rpd.toLocaleString()}\` RPD`;
 }
 
 export function languageLabel(lang: Language): string {
