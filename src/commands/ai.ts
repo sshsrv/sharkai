@@ -377,10 +377,7 @@ async function handleModels(interaction: ChatInputCommandInteraction): Promise<v
 			{ key: 'opencode', label: PROVIDER_LABEL['opencode'] ?? 'OpenCode' },
 		];
 
-		const legendText = `\n---\n**${t(lang, 'modelsLegendTitle')}**\n` +
-			`${PRIVACY_SHIELD.safe} ${t(lang, 'privacySafe')} · ` +
-			`${PRIVACY_SHIELD.warn} ${t(lang, 'privacyWarn')} · ` +
-			`${PRIVACY_SHIELD.unsafe} ${t(lang, 'privacyUnsafe')}`;
+		const legendText = `-# ${PRIVACY_SHIELD.safe} Private · ${PRIVACY_SHIELD.warn} Data-retention · ${PRIVACY_SHIELD.unsafe} Training`;
 
 		const providerBlocks: Array<{ header: string; models: string }> = [];
 		for (const { key, label } of providerOrder) {
@@ -399,11 +396,11 @@ async function handleModels(interaction: ChatInputCommandInteraction): Promise<v
 				const e = modelEmoji(m.id);
 				const shield = PRIVACY_SHIELD[MODELS[m.id].privacy];
 				const usage = m.limit === 0 ? '∞' : `${Math.max(0, m.limit - m.used)}/${m.limit}`;
-				return `- ${shield}・${e} ${MODELS[m.id].name} \`${usage}\``;
+				return `${shield}・${e} ${MODELS[m.id].name} \`${usage}\``;
 			}).join('\n');
 
 			providerBlocks.push({
-				header: `### ${pEmoji} ${label}`,
+				header: `${pEmoji} **${label}**`,
 				models: modelLines,
 			});
 		}
@@ -414,21 +411,21 @@ async function handleModels(interaction: ChatInputCommandInteraction): Promise<v
 		let currentChars = 0;
 
 		const titleText = t(lang, 'modelsTitle');
-		const subtitleText = t(lang, 'modelsShared');
 
 		for (const block of providerBlocks) {
 			const blockText = `${block.header}\n${block.models}`;
 			const blockChars = blockText.length + 4;
 
 			if (currentPage.length === 0) {
-				currentPage.push(boxTitle(titleText), separator(), text(`## ${subtitleText}`));
-				currentChars = titleText.length + subtitleText.length + 10;
+				currentPage.push(boxTitle(titleText));
+				currentChars = titleText.length;
 			}
 
-			if (currentChars + blockChars > BOX_BUDGET && currentPage.length > 3) {
+			if (currentChars + blockChars > BOX_BUDGET && currentPage.length > 1) {
+				currentPage.push(separator(), text(legendText));
 				pages.push(currentPage);
-				currentPage = [boxTitle(titleText), separator(), text(`## ${subtitleText}`)];
-				currentChars = titleText.length + subtitleText.length + 10;
+				currentPage = [boxTitle(titleText)];
+				currentChars = titleText.length;
 			}
 
 			currentPage.push(separator(), text(blockText));
@@ -436,17 +433,8 @@ async function handleModels(interaction: ChatInputCommandInteraction): Promise<v
 		}
 
 		if (currentPage.length > 0) {
-			if (pages.length === 0) {
-				currentPage.push(separator(), text(legendText));
-			}
+			currentPage.push(separator(), text(legendText));
 			pages.push(currentPage);
-		}
-
-		if (pages.length > 1) {
-			const lastPage = pages[pages.length - 1];
-			const legendBlock = separator();
-			const legendTextBlock = text(legendText);
-			lastPage.push(legendBlock, legendTextBlock);
 		}
 
 		if (pages.length === 0) {
