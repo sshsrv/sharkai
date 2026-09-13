@@ -2,7 +2,7 @@ import { text, separator, button, actionRow, box, type V2Component } from './com
 import { footer } from './display.js';
 import { t } from './strings.js';
 import type { PendingData, PendingKind } from './pending.js';
-import { MODELS, CHARS_BUDGET, type Language } from './config.js';
+import { CHARS_BUDGET, type Language } from './config.js';
 
 export interface ThinkingOptions {
   kind: PendingKind;
@@ -18,7 +18,6 @@ export interface ThinkingOptions {
 export function renderThinkingComponents(options: ThinkingOptions): V2Component[] {
   const { kind, targetContent, modelId, emoji, lang, targetMessageId, channelId, guildId } = options;
 
-  const modelName = MODELS[modelId]?.name ?? 'AI';
   const e = emoji ?? '';
 
   const header = targetContent
@@ -40,7 +39,7 @@ export function renderThinkingComponents(options: ThinkingOptions): V2Component[
     ...(header ? [text(header)] : []),
     ...(label ? [text(`-# ${label}`)] : []),
     separator(),
-    text(`-# ${t(lang, thinkingKey, `${e} ${modelName}`)}`),
+    text(`-# ${t(lang, thinkingKey, `${e} ${modelId}`)}`),
   ];
 
   return [box(content)];
