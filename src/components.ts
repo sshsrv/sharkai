@@ -6,7 +6,7 @@ import {
   InteractionResponseType,
   Routes,
 } from 'discord.js';
-import { ACCENT_COLOR } from './config.js';
+
 
 export const IS_COMPONENTS_V2 = 1 << 15;
 export const EPHEMERAL = 1 << 6;
@@ -42,7 +42,7 @@ export const actionRow = (...components: V2Component[]): V2Component =>
   ({ type: 1, components });
 
 export const box = (components: V2Component[]): V2Component =>
-  ({ type: 17, components, ...(ACCENT_COLOR !== undefined ? { accent_color: ACCENT_COLOR } : {}) });
+  ({ type: 17, components, accent_color: 0x41AFFf });
 
 export const section = (components: V2Component[]): V2Component =>
   ({ type: 9, components });

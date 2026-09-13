@@ -23,6 +23,7 @@ import {
   deferUpdate,
   editComponents,
   text,
+  box,
   type V2Component,
 } from '../components.js';
 import type { Language } from '../config.js';
@@ -33,14 +34,10 @@ import {
   type PendingData,
   type PendingKind,
 } from '../pending.js';
-import { renderComponents, cleanAnswer } from '../render.js';
+import { renderComponents, renderThinkingComponents, cleanAnswer } from '../render.js';
 
 function defaultPrompt(lang: Language): string {
   return lang === 'es' ? DEFAULT_PROMPT_ES : DEFAULT_PROMPT_EN;
-}
-
-function thinkingComponents(lang: Language, emoji: string, name: string): V2Component[] {
-  return [text(t(lang, 'contextThinking', `${emoji} ${name}`))];
 }
 
 const regenLast = new Map<string, number>();
@@ -73,11 +70,19 @@ async function runContextAction(
   const fullPrompt = `${promptBase}\n\n${t(lang, promptTemplateKey, targetContent)}`;
 
   const thinkingEmoji = modelEmoji(model.id);
-  const thinkingName = model.name;
 
   await replyComponents(
     interaction,
-    thinkingComponents(lang, thinkingEmoji, thinkingName),
+    renderThinkingComponents({
+      kind: promptTemplateKey,
+      targetContent,
+      modelId: model.id,
+      emoji: thinkingEmoji,
+      lang,
+      targetMessageId: interaction.targetMessage.id,
+      channelId: interaction.channelId,
+      guildId: interaction.guildId,
+    }),
     { ephemeral: true },
   );
 
@@ -179,6 +184,17 @@ export async function handleRegen(interaction: ButtonInteraction): Promise<void>
   await deferUpdate(interaction);
 
   try {
+    await editComponents(interaction, renderThinkingComponents({
+      kind: data.kind,
+      targetContent: data.targetContent,
+      modelId: model.id,
+      emoji: modelEmoji(model.id),
+      lang,
+      targetMessageId: data.targetMessageId,
+      channelId: data.channelId,
+      guildId: data.guildId,
+    }));
+
     let fullPrompt: string;
     if (data.kind === 'factCheckPrompt' || data.kind === 'replyPrompt') {
       const promptBase = getPrompt(interaction.user.id) || defaultPrompt(lang);
@@ -271,6 +287,17 @@ export async function handleAskModal(interaction: ModalSubmitInteraction): Promi
   await deferComponents(interaction, { ephemeral: !data.visible });
 
   try {
+    await editComponents(interaction, renderThinkingComponents({
+      kind: 'ask',
+      targetContent: followUp,
+      modelId: model.id,
+      emoji: modelEmoji(model.id),
+      lang,
+      targetMessageId: null,
+      channelId: data.channelId,
+      guildId: data.guildId,
+    }));
+
     const result = await ask(newPrompt, model.id, interaction.user.id);
     recordRequest(result.provider, result.model);
 
@@ -359,6 +386,17 @@ export async function handleContextModal(interaction: ModalSubmitInteraction): P
   await deferUpdate(interaction);
 
   try {
+    await editComponents(interaction, renderThinkingComponents({
+      kind: data.kind,
+      targetContent: data.targetContent,
+      modelId: model.id,
+      emoji: modelEmoji(model.id),
+      lang,
+      targetMessageId: data.targetMessageId,
+      channelId: data.channelId,
+      guildId: data.guildId,
+    }));
+
     const result = await ask(newPrompt, model.id, interaction.user.id);
     recordRequest(result.provider, result.model);
 

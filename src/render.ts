@@ -2,7 +2,49 @@ import { text, separator, button, actionRow, box, type V2Component } from './com
 import { footer } from './display.js';
 import { t } from './strings.js';
 import type { PendingData, PendingKind } from './pending.js';
-import { CHARS_BUDGET } from './config.js';
+import { MODELS, CHARS_BUDGET, type Language } from './config.js';
+
+export interface ThinkingOptions {
+  kind: PendingKind;
+  targetContent: string;
+  modelId: string;
+  emoji: string | undefined;
+  lang: Language;
+  targetMessageId?: string | null;
+  channelId?: string;
+  guildId?: string | null;
+}
+
+export function renderThinkingComponents(options: ThinkingOptions): V2Component[] {
+  const { kind, targetContent, modelId, emoji, lang, targetMessageId, channelId, guildId } = options;
+
+  const modelName = MODELS[modelId]?.name ?? 'AI';
+  const e = emoji ?? '';
+
+  const header = targetContent
+    ? kind === 'ask'
+      ? `# ${targetContent}`
+      : `# [${targetContent}](https://discord.com/channels/${guildId ?? '@me'}/${channelId}/${targetMessageId})`
+    : undefined;
+
+  const labelMap: Record<string, string> = {
+    factCheckPrompt: 'factCheckLabel',
+    summarizePrompt: 'summarizeLabel',
+    explainPrompt: 'explainLabel',
+  };
+  const label = labelMap[kind] ? t(lang, labelMap[kind]) : '';
+
+  const thinkingKey = kind === 'ask' ? 'thinkingText' : 'contextThinking';
+
+  const content: V2Component[] = [
+    ...(header ? [text(header)] : []),
+    ...(label ? [text(`-# ${label}`)] : []),
+    separator(),
+    text(`-# ${t(lang, thinkingKey, `${e} ${modelName}`)}`),
+  ];
+
+  return [box(content)];
+}
 
 export function cleanAnswer(text: string, promptTemplateKey: PendingKind | null): string {
   let out = text;

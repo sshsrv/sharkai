@@ -46,7 +46,7 @@ import {
   actionRow,
 } from '../components.js';
 import { genId, getPendingData, setPendingData } from '../pending.js';
-import { renderComponents } from '../render.js';
+import { renderComponents, renderThinkingComponents } from '../render.js';
 import { modelEmoji } from '../display.js';
 
 const MODEL_CHOICES = CHAT_MODEL_IDS
@@ -232,11 +232,19 @@ async function handleAsk(interaction: ChatInputCommandInteraction): Promise<void
   }
 
   const thinkingModelId = overrideModel ?? getModel(interaction.user.id);
-  const thinkingModelName = MODELS[thinkingModelId]?.name ?? 'AI';
   const thinkingEmoji = modelEmoji(thinkingModelId);
   await replyComponents(
     interaction,
-    [box([text(t(lang, 'thinkingText', `${thinkingEmoji} ${thinkingModelName}`))])],
+    renderThinkingComponents({
+      kind: 'ask',
+      targetContent: question,
+      modelId: thinkingModelId,
+      emoji: thinkingEmoji,
+      lang,
+      targetMessageId: null,
+      channelId: interaction.channelId,
+      guildId: interaction.guildId,
+    }),
     { ephemeral: !visible },
   );
 
