@@ -199,7 +199,7 @@ const CommandOptionSchema = z.object({
   description: z.string(),
   type: z.number(),
   required: z.boolean(),
-  choices: z.record(z.string(), z.string()).optional(),
+  choices: z.record(z.string(), z.string()).nullish(),
 });
 
 const SubCommandSchema = z.object({
