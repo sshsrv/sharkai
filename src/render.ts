@@ -2,8 +2,7 @@ import { text, separator, button, actionRow, box, type V2Component } from './com
 import { footer } from './display.js';
 import { t } from './strings.js';
 import type { PendingData, PendingKind } from './pending.js';
-
-const CHARS_BUDGET = 4000;
+import { CHARS_BUDGET } from './config.js';
 
 export function cleanAnswer(text: string, promptTemplateKey: PendingKind | null): string {
   let out = text;
@@ -37,7 +36,12 @@ export function renderComponents(pending: PendingData, contentId: string, visibl
       : `# [${targetContent}](https://discord.com/channels/${guildId ?? '@me'}/${channelId}/${targetMessageId})`
     : undefined;
 
-  const label = kind === 'factCheckPrompt' ? t(lang, 'factCheckLabel') : '';
+  const labelMap: Record<string, string> = {
+    factCheckPrompt: 'factCheckLabel',
+    summarizePrompt: 'summarizeLabel',
+    explainPrompt: 'explainLabel',
+  };
+  const label = labelMap[kind] ? t(lang, labelMap[kind]) : '';
 
   const content: V2Component[] = [
     ...(header ? [text(header)] : []),

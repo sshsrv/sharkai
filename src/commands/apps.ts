@@ -11,20 +11,18 @@ import {
   TextInputStyle,
   MessageContextMenuCommandInteraction,
 } from 'discord.js';
-import { MODELS, DEFAULT_MODEL, DEFAULT_PROMPT_EN, DEFAULT_PROMPT_ES } from '../config.js';
+import { MODELS, DEFAULT_MODEL, DEFAULT_PROMPT_EN, DEFAULT_PROMPT_ES, REGEN_COOLDOWN_MS, LAST_ASK_TTL_MS } from '../config.js';
 import { t } from '../strings.js';
 import { getModel, getPrompt, getLanguage } from '../store.js';
 import { ask } from '../providers.js';
 import { recordRequest, getModelUsage } from '../usage.js';
-import { footer, modelEmoji } from './ai.js';
+import { modelEmoji } from '../display.js';
 import {
   replyComponents,
   deferComponents,
   deferUpdate,
   editComponents,
-  updateComponents,
   text,
-  separator,
   type V2Component,
 } from '../components.js';
 import type { Language } from '../config.js';
@@ -46,7 +44,12 @@ function thinkingComponents(lang: Language, emoji: string, name: string): V2Comp
 }
 
 const regenLast = new Map<string, number>();
-const REGEN_COOLDOWN_MS = 10_000;
+setInterval(() => {
+  const cutoff = Date.now() - LAST_ASK_TTL_MS;
+  for (const [id, ts] of regenLast) {
+    if (ts < cutoff) regenLast.delete(id);
+  }
+}, 10 * 60 * 1000).unref();
 
 function checkRegenRateLimit(userId: string): number | null {
   const now = Date.now();
@@ -66,7 +69,7 @@ async function runContextAction(
   const customPrompt = getPrompt(interaction.user.id);
   const model = MODELS[modelId] ?? MODELS[DEFAULT_MODEL];
   const promptBase = customPrompt || defaultPrompt(lang);
-  const targetContent = interaction.targetMessage.content || '(no text content)';
+  const targetContent = interaction.targetMessage.content || t(lang, 'noTextContent');
   const fullPrompt = `${promptBase}\n\n${t(lang, promptTemplateKey, targetContent)}`;
 
   const thinkingEmoji = modelEmoji(model.id);
@@ -146,7 +149,6 @@ export async function handleCopy(interaction: ButtonInteraction): Promise<void> 
     return;
   }
 
-  setPendingData(contentId, data);
   const codeBlock = `\`\`\`\n${data.text}\n\`\`\``;
   await replyComponents(interaction, [text(codeBlock)], { ephemeral: true });
 }
@@ -180,7 +182,11 @@ export async function handleRegen(interaction: ButtonInteraction): Promise<void>
     let fullPrompt: string;
     if (data.kind === 'factCheckPrompt' || data.kind === 'replyPrompt') {
       const promptBase = getPrompt(interaction.user.id) || defaultPrompt(lang);
-      fullPrompt = `${promptBase}\n\n${t(lang, data.promptTemplateKey!, data.targetContent)}`;
+      if (data.promptTemplateKey) {
+        fullPrompt = `${promptBase}\n\n${t(lang, data.promptTemplateKey, data.targetContent)}`;
+      } else {
+        fullPrompt = data.originalPrompt;
+      }
     } else {
       fullPrompt = data.originalPrompt;
     }
@@ -396,7 +402,7 @@ export const factCheckCommand = new ContextMenuCommandBuilder()
   .setContexts([InteractionContextType.Guild, InteractionContextType.BotDM, InteractionContextType.PrivateChannel]);
 
 export const replyMessageCommand = new ContextMenuCommandBuilder()
-  .setName('Reply')
+  .setName('Ask')
   .setType(ApplicationCommandType.Message)
   .setIntegrationTypes([ApplicationIntegrationType.UserInstall, ApplicationIntegrationType.GuildInstall])
   .setContexts([InteractionContextType.Guild, InteractionContextType.BotDM, InteractionContextType.PrivateChannel]);

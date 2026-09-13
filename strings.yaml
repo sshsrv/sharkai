@@ -64,6 +64,7 @@ responses:
   en:
     answerTruncated: '…'
     thinkingText: '{{0}} is thinking…'
+    noPrompt: '(none)'
     cooldown: 'Wait {{0}}s between questions.'
     error: 'Error: {{0}}'
     factCheckPrompt: "You are an expert fact-checker. Analyze the following message and produce a structured fact-check.\n\nYour response MUST use exactly these 3 sections as markdown headings, in this order:\n\n## Verdict\nStart with one colored circle emoji and its label (🟢 True, 🟡 Misleading, 🟠 Half-true, 🔴 False, ⚪ Uncertain),\nthen the concise one-line summary as a single bullet point on the next line, starting with \"- \".\n\n## Analysis\nDetailed reasoning, evidence, and context. Be concise but thorough.\n\n## Sources\nList sources as bullet points. Every source MUST include a URL link. If no specific source, state your reasoning basis.\n\nDo NOT add any text outside these 3 sections.\nSeparate the three sections with a single line break — no empty lines between sections, and no empty line directly after a heading.\nDo NOT include 'Claim:' or any prefix before the user message — the user message will be displayed separately above your response.\n\nMessage to fact-check:\n> {{0}}"
@@ -78,16 +79,20 @@ responses:
     contextThinking: '{{0}} is thinking…'
     contextResult: '{{0}} result'
     factCheckLabel: 'Fact-Check'
+    summarizeLabel: 'Summarize'
+    explainLabel: 'Explain'
     h1LanguageSet: 'Language set to {{0}}'
+    languageChanged: 'Changed from {{0}} to {{1}}'
     h1SetModel: 'Default model set to {{0}}'
     h1SetPrompt: 'Custom prompt saved'
     h1SetBoth: 'Default model set to {{0}} · Custom prompt saved'
     h1SetShow: 'Your current settings'
     h1Clear: 'Conversation cleared'
+    clearBody: 'Context history has been cleared. Your next message starts a fresh conversation.'
     h1Reset: 'Settings reset'
     invalidLanguage: 'Invalid language.'
     invalidModel: 'Invalid model: `{{0}}`'
-    resetBody: "Model: {{0}}\nPrompt: {{1}}\nLanguage: {{2}}"
+    resetBody: "**Model:** {{0}}\n**Prompt:** {{1}}\n**Language:** {{2}}"
     unknownSub: 'Unknown subcommand.'
     modelsTitle: 'All Models'
     modelsShared: "Shared daily usage (same API quota)"
@@ -102,6 +107,8 @@ responses:
     usageShared: "Shared across all models (same API quota)"
     usageTitle: 'Usage'
     usageTokensTag: 'TPM'
+    usageRemaining: 'remaining'
+    usageProviderLimits: '-# Limits from {{0}} free tier.'
     askButton: 'Ask'
     copyButton: 'Copy'
     regenButton: 'Regen'
@@ -109,9 +116,14 @@ responses:
     askModalTitle: 'Ask a follow-up'
     askModalLabel: 'Your question'
     askModalPlaceholder: 'Ask anything about this response…'
+    noTextContent: '(no text content)'
+    modelsPrev: '◀ Prev'
+    modelsNext: 'Next ▶'
+    modelsPage: 'Page'
   es:
     answerTruncated: '…'
     thinkingText: '{{0}} está pensando…'
+    noPrompt: '(ninguno)'
     cooldown: 'Espera {{0}}s entre preguntas.'
     error: 'Error: {{0}}'
     factCheckPrompt: "Eres un experto en verificación de hechos. Analiza el siguiente mensaje y produce una verificación estructurada.\n\nTu respuesta DEBE usar exactamente estas 3 secciones como encabezados de markdown, en este orden:\n\n## Veredicto\nEmpieza con un emoji de círculo de color y su etiqueta (🟢 Verdadero, 🟡 Engañoso, 🟠 A medias, 🔴 Falso, ⚪ Incierto),\ny después el resumen conciso de una línea como una única viñeta en la línea siguiente, que empieza con \"- \".\n\n## Análisis\nRazonamiento detallado, evidencia y contexto. Sé conciso pero exhaustivo.\n\n## Fuentes\nLista las fuentes como viñetas. TODAS las fuentes DEBEN incluir un enlace URL. Si no hay fuente específica, indica la base de tu razonamiento.\n\nNO añadas texto fuera de estas 3 secciones.\nSepara las tres secciones con un único salto de línea — sin líneas vacías entre secciones, y sin línea vacía justo después de un encabezado.\nNO incluyas 'Claim:' ni ningún prefijo antes del mensaje del usuario — el mensaje del usuario se mostrará separado arriba de tu respuesta.\n\nMensaje a verificar:\n> {{0}}"
@@ -126,16 +138,20 @@ responses:
     contextThinking: '{{0}} está pensando…'
     contextResult: 'Resultado de {{0}}'
     factCheckLabel: 'Verificación de hechos'
+    summarizeLabel: 'Resumen'
+    explainLabel: 'Explicación'
     h1LanguageSet: 'Idioma configurado: {{0}}'
+    languageChanged: 'Cambiado de {{0}} a {{1}}'
     h1SetModel: 'Modelo por defecto configurado: {{0}}'
     h1SetPrompt: 'Prompt personalizado guardado'
     h1SetBoth: 'Modelo por defecto configurado: {{0}} · Prompt personalizado guardado'
     h1SetShow: 'Tus ajustes actuales'
     h1Clear: 'Conversación borrada'
+    clearBody: 'El historial de contexto ha sido borrado. Tu próximo mensaje empezará una conversación nueva.'
     h1Reset: 'Ajustes reiniciados'
     invalidLanguage: 'Idioma no válido.'
     invalidModel: 'Modelo no válido: `{{0}}`'
-    resetBody: "Modelo: {{0}}\nPrompt: {{1}}\nIdioma: {{2}}"
+    resetBody: "**Modelo:** {{0}}\n**Prompt:** {{1}}\n**Idioma:** {{2}}"
     unknownSub: 'Subcomando desconocido.'
     modelsTitle: 'Todos los modelos'
     modelsShared: "Uso diario compartido (misma cuota de API)"
@@ -150,6 +166,8 @@ responses:
     usageShared: "Compartido entre todos los modelos (misma cuota de API)"
     usageTitle: 'Uso'
     usageTokensTag: 'TPM'
+    usageRemaining: 'restantes'
+    usageProviderLimits: '-# Límites del free tier de {{0}}.'
     askButton: 'Preguntar'
     copyButton: 'Copiar'
     regenButton: 'Regenerar'
@@ -157,3 +175,7 @@ responses:
     askModalTitle: 'Pregunta de seguimiento'
     askModalLabel: 'Tu pregunta'
     askModalPlaceholder: 'Pregunta algo sobre esta respuesta…'
+    noTextContent: '(sin contenido de texto)'
+    modelsPrev: '◀ Ant'
+    modelsNext: 'Sig ▶'
+    modelsPage: 'Página'

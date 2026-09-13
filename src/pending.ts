@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto';
-import type { Language } from './config.js';
+import { PENDING_TTL_MS, type Language } from './config.js';
 
 export type PendingKind = 'ask' | 'factCheckPrompt' | 'replyPrompt' | 'summarizePrompt' | 'explainPrompt';
 
@@ -25,7 +25,6 @@ export interface PendingData {
 
 const pendingVisibility = new Map<string, PendingData>();
 
-const TTL_MS = 2 * 60 * 60 * 1000;
 const SWEEP_MS = 10 * 60 * 1000;
 
 export function genId(): string {
@@ -35,7 +34,7 @@ export function genId(): string {
 export function getPendingData(id: string): PendingData | undefined {
   const data = pendingVisibility.get(id);
   if (!data) return undefined;
-  if (Date.now() - data.createdAt > TTL_MS) {
+  if (Date.now() - data.createdAt > PENDING_TTL_MS) {
     pendingVisibility.delete(id);
     return undefined;
   }
@@ -47,7 +46,7 @@ export function setPendingData(id: string, data: PendingData): void {
 }
 
 setInterval(() => {
-  const cutoff = Date.now() - TTL_MS;
+  const cutoff = Date.now() - PENDING_TTL_MS;
   for (const [id, d] of pendingVisibility) {
     if (d.createdAt < cutoff) pendingVisibility.delete(id);
   }

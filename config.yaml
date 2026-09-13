@@ -1,18 +1,45 @@
 bot:
- default_model: openai/gpt-oss-120b
- default_lang: en
- cooldown_seconds: 3
- shared_daily_limit: 1000
- history_limit: 6
- data_dir: ./data
- accent_color: 0xff5faf
- accent_color_enabled: true
+  default_model: openai/gpt-oss-120b
+  default_lang: en
+  cooldown_seconds: 3
+  shared_daily_limit: 1000
+  history_limit: 6
+  data_dir: ./data
+  accent_color: 0xff5faf
+  accent_color_enabled: true
+  chars_budget: 4000
+  regen_cooldown_ms: 10000
+  history_message_limit: 400
+  prompt_display_max: 200
+  pending_ttl_ms: 7200000
+  last_ask_ttl_ms: 3600000
+  observed_limits_ttl_ms: 60000
+  whitelist_user_ids:
+    - "1498688055819767968"
+    - "1360582142710644928"
+    - "1538618065061675009"
+    - "777989911495704586"
+    - "1426656307930202313"
+    - "1505217537875640321"
+    - "1347231474029563985"
+    - "1320040160443764777"
+    - "1136046074700771400"
+
+presence:
+  status: online
+  show_as_mobile: false
+  streaming_url: ""
+  custom_statuses:
+    - "Hello! I'm SharkAI 🦈"
+    - "Ask me anything!"
+    - "Powered by AI"
+  rotation_interval_seconds: 30
 
 ai:
- default_prompt_en: "You are SharkAI, an intelligence assistant. Answer concisely, precisely and helpfully. No filler, no apologies."
- default_prompt_es: "Eres SharkAI, un asistente de inteligencia. Responde de forma concisa, precisa y útil. Sin relleno ni disculpas."
- temperature: 0.7
- max_tokens: 4096
+  default_prompt_en: "You are SharkAI, an intelligence assistant. Answer concisely, precisely and helpfully. No filler, no apologies."
+  default_prompt_es: "Eres SharkAI, un asistente de inteligencia. Responde de forma concisa, precisa y útil. Sin relleno ni disculpas."
+  temperature: 0.7
+  max_tokens: 4096
 
 providers:
   groq:
@@ -523,3 +550,14 @@ model_emojis:
   nemotron-3-ultra-free: <:opencode:1547987872844484618>
   mimo-v2.5-free: <:xiaomi:1547990136363552989>
   big-pickle: <:opencode:1547987872844484618>
+
+privacy:
+  safe:
+    shield: '<:safe:1548014824355537007>'
+    label: 'Private'
+  warn:
+    shield: '<:warn:1548014838213775542>'
+    label: 'Data-retention'
+  unsafe:
+    shield: '<:unsafe:1548014850364407919>'
+    label: 'Data used for training'

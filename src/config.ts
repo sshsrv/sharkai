@@ -44,17 +44,13 @@ export const CHAT_MODEL_IDS = Object.keys(MODELS);
 
 export const MODEL_EMOJI: ModelEmojiMap = (raw?.model_emojis as ModelEmojiMap) ?? {} as ModelEmojiMap;
 
-export const PRIVACY_SHIELD: Record<Privacy, string> = {
-  safe: '<:safe:1548014824355537007>',
-  warn: '<:warn:1548014838213775542>',
-  unsafe: '<:unsafe:1548014850364407919>',
-};
+export const PRIVACY_SHIELD: Record<Privacy, string> = raw?.privacy
+  ? { safe: raw.privacy.safe.shield, warn: raw.privacy.warn.shield, unsafe: raw.privacy.unsafe.shield }
+  : { safe: '<:safe:1548014824355537007>', warn: '<:warn:1548014838213775542>', unsafe: '<:unsafe:1548014850364407919>' };
 
-export const PRIVACY_LABEL: Record<Privacy, string> = {
-  safe: 'Private',
-  warn: 'Data-retention',
-  unsafe: 'Data used for training',
-};
+export const PRIVACY_LABEL: Record<Privacy, string> = raw?.privacy
+  ? { safe: raw.privacy.safe.label, warn: raw.privacy.warn.label, unsafe: raw.privacy.unsafe.label }
+  : { safe: 'Private', warn: 'Data-retention', unsafe: 'Data used for training' };
 
 export const DEFAULT_MODEL: string = raw?.bot?.default_model ?? 'openai/gpt-oss-120b';
 
@@ -76,6 +72,21 @@ export const DEFAULT_PROMPT_ES: string =
 export const AI_TEMPERATURE: number = raw?.ai?.temperature ?? 0.7;
 export const AI_MAX_TOKENS: number = raw?.ai?.max_tokens ?? 4096;
 export const ACCENT_COLOR: number | undefined = raw?.bot?.accent_color_enabled ? (raw?.bot?.accent_color ?? 0x5865F2) : undefined;
+
+export const CHARS_BUDGET: number = raw?.bot?.chars_budget ?? 4000;
+export const REGEN_COOLDOWN_MS: number = raw?.bot?.regen_cooldown_ms ?? 10000;
+export const HISTORY_MESSAGE_LIMIT: number = raw?.bot?.history_message_limit ?? 400;
+export const PROMPT_DISPLAY_MAX: number = raw?.bot?.prompt_display_max ?? 200;
+export const PENDING_TTL_MS: number = raw?.bot?.pending_ttl_ms ?? 7200000;
+export const LAST_ASK_TTL_MS: number = raw?.bot?.last_ask_ttl_ms ?? 3600000;
+export const OBSERVED_LIMITS_TTL_MS: number = raw?.bot?.observed_limits_ttl_ms ?? 60000;
+export const WHITELIST_USER_IDS: string[] = raw?.bot?.whitelist_user_ids ?? [];
+
+export const PRESENCE_STATUS: string = raw?.presence?.status ?? 'online';
+export const PRESENCE_SHOW_AS_MOBILE: boolean = raw?.presence?.show_as_mobile ?? false;
+export const PRESENCE_STREAMING_URL: string = raw?.presence?.streaming_url ?? '';
+export const PRESENCE_CUSTOM_STATUSES: string[] = raw?.presence?.custom_statuses ?? [];
+export const PRESENCE_ROTATION_SECONDS: number = raw?.presence?.rotation_interval_seconds ?? 30;
 
 export const env = {
   discordToken: process.env.DISCORD_TOKEN ?? '',
