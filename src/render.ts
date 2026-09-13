@@ -113,6 +113,5 @@ export function renderComponents(pending: PendingData, contentId: string, visibl
 
   const row = actionRow(...buttons);
 
-  if (visible) return [...content, row];
   return [box(content), row];
 }
