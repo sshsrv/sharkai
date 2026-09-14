@@ -148,7 +148,12 @@ export const aiCommand = {
         .addStringOption((o) =>
           o
             .setName('prompt')
-            .setDescription('Custom system prompt (empty string to reset)'),
+            .setDescription('Custom system prompt'),
+        )
+        .addBooleanOption((o) =>
+          o
+            .setName('reset_prompt')
+            .setDescription('Reset prompt to default (clears custom prompt)'),
         ),
     )
     .addSubcommand((s) => s.setName('models').setDescription('List all models with usage and privacy info'))
@@ -278,8 +283,9 @@ async function handleSet(interaction: ChatInputCommandInteraction): Promise<void
   const lang = getLanguage(interaction.user.id);
   const modelArg = interaction.options.getString('model');
   const promptArg = interaction.options.getString('prompt');
+  const resetPrompt = interaction.options.getBoolean('reset_prompt') ?? false;
 
-  if (!modelArg && promptArg === null) {
+  if (!modelArg && promptArg === null && !resetPrompt) {
     const currentModel = getModel(interaction.user.id);
     const currentPrompt = getPrompt(interaction.user.id);
     const m = MODELS[currentModel];
@@ -315,7 +321,10 @@ async function handleSet(interaction: ChatInputCommandInteraction): Promise<void
     updates.push('model');
   }
 
-  if (promptArg !== null) {
+  if (resetPrompt) {
+    setPrompt(interaction.user.id, '');
+    updates.push('prompt');
+  } else if (promptArg !== null) {
     setPrompt(interaction.user.id, promptArg.trim());
     updates.push('prompt');
   }
