@@ -60,6 +60,14 @@ const client = new Client({
 
 client.once(Events.ClientReady, async (c) => {
   console.log(`✅ SharkAI logueado como ${c.user.tag}`);
+  if (WHITELIST_USER_IDS.length > 0) {
+    for (const uid of WHITELIST_USER_IDS) {
+      try {
+        const user = await c.users.fetch(uid);
+        await user.createDM();
+      } catch {}
+    }
+  }
   try {
     await c.application?.commands.set([
       aiCommand.data.toJSON(),
@@ -114,16 +122,7 @@ client.once(Events.ClientReady, async (c) => {
   }
 });
 
-const dmWarmed = new Set<string>();
-
-function warmDM(userId: string): void {
-  if (dmWarmed.has(userId)) return;
-  dmWarmed.add(userId);
-  client.users.fetch(userId).then(u => u.createDM()).catch(() => {});
-}
-
 client.on(Events.InteractionCreate, async (interaction) => {
-  warmDM(interaction.user.id);
   if (WHITELIST_USER_IDS.length > 0 && !WHITELIST_USER_IDS.includes(interaction.user.id)) {
     if (interaction.isAutocomplete()) {
       await interaction.respond([]);
@@ -214,7 +213,6 @@ client.on(Events.InteractionCreate, async (interaction) => {
 });
 
 client.on(Events.MessageCreate, async (message) => {
-  if (!message.author.bot) warmDM(message.author.id);
   try {
     await handleMessage(message);
   } catch (err) {
