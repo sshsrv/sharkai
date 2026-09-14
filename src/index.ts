@@ -207,7 +207,9 @@ client.on(Events.InteractionCreate, async (interaction) => {
 client.on(Events.MessageCreate, async (message) => {
   try {
     await handleMessage(message);
-  } catch {}
+  } catch (err) {
+    console.error('⚠️ handleMessage error:', err instanceof Error ? err.message : err);
+  }
 });
 
 client.login(env.discordToken).catch((err: unknown) => {

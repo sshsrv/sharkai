@@ -120,7 +120,7 @@ async function runContextAction(
     await editComponents(interaction, renderComponents(pendingData, contentId, false));
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    await editComponents(interaction, [text(t(lang, 'error', message))]);
+    await editComponents(interaction, [box([text(t(lang, 'error', message))])]);
   }
 }
 
@@ -232,7 +232,7 @@ export async function handleRegen(interaction: ButtonInteraction): Promise<void>
     await editComponents(interaction, renderComponents(newData, newId, data.visible));
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    await editComponents(interaction, [text(t(lang, 'error', message))]);
+    await editComponents(interaction, [box([text(t(lang, 'error', message))])]);
   }
 }
 
@@ -331,7 +331,7 @@ export async function handleAskModal(interaction: ModalSubmitInteraction): Promi
     await editComponents(interaction, renderComponents(newData, newId, data.visible));
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    await editComponents(interaction, [text(t(lang, 'error', message))]);
+    await editComponents(interaction, [box([text(t(lang, 'error', message))])]);
   }
 }
 
@@ -430,7 +430,7 @@ export async function handleContextModal(interaction: ModalSubmitInteraction): P
     await editComponents(interaction, renderComponents(newData, newContentId, data.visible));
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    await editComponents(interaction, [text(t(lang, 'error', message))]);
+    await editComponents(interaction, [box([text(t(lang, 'error', message))])]);
   }
 }
 

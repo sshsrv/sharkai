@@ -1,4 +1,3 @@
-import { randomBytes } from 'node:crypto';
 import { ButtonInteraction } from 'discord.js';
 import { genId } from '../pending.js';
 import { replyComponents, text, separator, button, actionRow, box, type V2Component } from '../components.js';
@@ -112,7 +111,6 @@ export function renderTranslation(
 
   const row = actionRow(...buttons);
 
-  if (visible) return [box(content), row];
   return [box(content), row];
 }
 

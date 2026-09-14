@@ -39,7 +39,11 @@ export async function handleMessage(message: Message): Promise<void> {
   } catch (err) {
     const errorMsg = err instanceof Error ? err.message : String(err);
     try {
-      await message.reply(`Error: ${errorMsg}`);
+      if (isDM) {
+        await message.channel.send(`Error: ${errorMsg}`);
+      } else {
+        await message.reply(`Error: ${errorMsg}`);
+      }
     } catch {}
   }
 }

@@ -11,12 +11,8 @@ import {
 } from '../config.js';
 import { getLanguage, setLanguage } from '../store.js';
 import { t } from '../strings.js';
-import { replyComponents, text, box, separator } from '../components.js';
+import { replyComponents, text, box, separator, heading } from '../components.js';
 import { toLatex, toLatin, renderTranslation } from './latin.js';
-
-function boxTitle(title: string) {
-  return { type: 10, content: `# ${title}` } as import('../components.js').V2Component;
-}
 
 export const shCommand = {
   data: new SlashCommandBuilder()
@@ -103,7 +99,7 @@ async function handleLanguage(interaction: ChatInputCommandInteraction): Promise
   setLanguage(interaction.user.id, lang);
   await replyComponents(
     interaction,
-    [box([boxTitle(t(lang, 'h1LanguageSet', languageLabel(lang))), separator(), text(t(lang, 'languageChanged', languageLabel(oldLang), languageLabel(lang)))])],
+    [box([heading(t(lang, 'h1LanguageSet', languageLabel(lang))), separator(), text(t(lang, 'languageChanged', languageLabel(oldLang), languageLabel(lang)))])],
     { ephemeral: true },
   );
 }
