@@ -31,6 +31,7 @@ import {
   handleContextModal,
 } from './commands/apps.js';
 import { handleCopyTranslation, handleMakeVisibleTranslation } from './commands/latin.js';
+import { handleMessage } from './commands/dms.js';
 
 if (!env.discordToken) {
   console.error('❌ Falta DISCORD_TOKEN en el entorno');
@@ -54,7 +55,7 @@ if (!env.opencodeApiKey) {
 }
 
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.DirectMessages],
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.DirectMessages, GatewayIntentBits.MessageContent],
 });
 
 client.once(Events.ClientReady, async (c) => {
@@ -201,6 +202,12 @@ client.on(Events.InteractionCreate, async (interaction) => {
     await handleAskModal(interaction);
     return;
   }
+});
+
+client.on(Events.MessageCreate, async (message) => {
+  try {
+    await handleMessage(message);
+  } catch {}
 });
 
 client.login(env.discordToken).catch((err: unknown) => {
