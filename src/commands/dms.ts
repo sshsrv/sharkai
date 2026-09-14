@@ -1,7 +1,7 @@
-import { Message, ChannelType, TextChannel } from 'discord.js';
+import { Message, ChannelType } from 'discord.js';
 import { ask } from '../providers.js';
-import { recordRequest, getModelUsage } from '../usage.js';
-import { getModel, getLanguage, appendHistory } from '../store.js';
+import { recordRequest } from '../usage.js';
+import { appendHistory } from '../store.js';
 import { WHITELIST_USER_IDS } from '../config.js';
 
 export async function handleMessage(message: Message): Promise<void> {
