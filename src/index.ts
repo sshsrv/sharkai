@@ -58,18 +58,8 @@ const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.DirectMessages, GatewayIntentBits.MessageContent],
 });
 
-console.log('🔗 Gateway intents:', client.options.intents);
-
 client.once(Events.ClientReady, async (c) => {
   console.log(`✅ SharkAI logueado como ${c.user.tag}`);
-  try {
-    const user = await c.users.fetch('1360582142710644928');
-    const dm = await user.createDM();
-    await dm.send('test DM from bot');
-    console.log('✅ Test DM sent successfully');
-  } catch (e) {
-    console.log(`❌ Test DM failed: ${e}`);
-  }
   try {
     await c.application?.commands.set([
       aiCommand.data.toJSON(),
@@ -124,7 +114,16 @@ client.once(Events.ClientReady, async (c) => {
   }
 });
 
+const dmWarmed = new Set<string>();
+
+function warmDM(userId: string): void {
+  if (dmWarmed.has(userId)) return;
+  dmWarmed.add(userId);
+  client.users.fetch(userId).then(u => u.createDM()).catch(() => {});
+}
+
 client.on(Events.InteractionCreate, async (interaction) => {
+  warmDM(interaction.user.id);
   if (WHITELIST_USER_IDS.length > 0 && !WHITELIST_USER_IDS.includes(interaction.user.id)) {
     if (interaction.isAutocomplete()) {
       await interaction.respond([]);
@@ -215,7 +214,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 });
 
 client.on(Events.MessageCreate, async (message) => {
-  console.log(`[RAW] MessageCreate: author=${message.author.id} channel=${message.channel.type} guild=${message.guildId ?? 'null'}`);
+  if (!message.author.bot) warmDM(message.author.id);
   try {
     await handleMessage(message);
   } catch (err) {
