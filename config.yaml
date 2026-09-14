@@ -32,9 +32,9 @@ presence:
   show_as_mobile: false
   streaming_url: ""
   custom_statuses:
-    - "Hello! I'm SharkAI 🦈"
-    - "Ask me anything!"
-    - "Powered by AI"
+    - "whitelist only. 🦈"
+    - "i bite. 🦈"
+    - "slava ssh. 🦈"
   rotation_interval_seconds: 30
 
 ai:
