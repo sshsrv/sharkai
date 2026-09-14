@@ -7,16 +7,21 @@ import {
   PRESENCE_ROTATION_SECONDS,
   WHITELIST_USER_IDS,
 } from './config.js';
-import { shCommand, handleModelsPrev, handleModelsNext } from './commands/ai.js';
+import { aiCommand, handleModelsPrev, handleModelsNext } from './commands/ai.js';
+import { shCommand } from './commands/sh.js';
 import {
   factCheckCommand,
   replyMessageCommand,
   summarizeCommand,
   explainCommand,
+  toLatexCommand,
+  toLatinCommand,
   handleFactCheck,
   handleReplyMessage,
   handleSummarize,
   handleExplain,
+  handleToLatex,
+  handleToLatin,
   handleMakeVisible,
   handleCopy,
   handleRegen,
@@ -25,6 +30,7 @@ import {
   showAddContextModal,
   handleContextModal,
 } from './commands/apps.js';
+import { handleCopyTranslation } from './commands/latin.js';
 
 if (!env.discordToken) {
   console.error('❌ Falta DISCORD_TOKEN en el entorno');
@@ -55,13 +61,16 @@ client.once(Events.ClientReady, async (c) => {
   console.log(`✅ SharkAI logueado como ${c.user.tag}`);
   try {
     await c.application?.commands.set([
+      aiCommand.data.toJSON(),
       shCommand.data.toJSON(),
       factCheckCommand.toJSON(),
       replyMessageCommand.toJSON(),
       summarizeCommand.toJSON(),
       explainCommand.toJSON(),
+      toLatexCommand.toJSON(),
+      toLatinCommand.toJSON(),
     ]);
-    console.log('✅ Comandos registrados: /sh, Fact-Check, Ask, Summarize, Explain');
+    console.log('✅ Comandos registrados: /ai, /sh, Fact-Check, Ask, Summarize, Explain, To Latex, To Latin');
     const appId = c.user.id;
     console.log(
       `🔗 Instala la app: https://discord.com/oauth2/authorize?client_id=${appId}&integration_type=1&scope=applications.commands`,
@@ -115,13 +124,15 @@ client.on(Events.InteractionCreate, async (interaction) => {
   }
 
   if (interaction.isAutocomplete()) {
-    if (interaction.commandName === 'sh') {
-      await shCommand.execute(interaction);
+    if (interaction.commandName === 'ai') {
+      await aiCommand.execute(interaction);
     }
     return;
   }
   if (interaction.isChatInputCommand()) {
-    if (interaction.commandName === 'sh') {
+    if (interaction.commandName === 'ai') {
+      await aiCommand.execute(interaction);
+    } else if (interaction.commandName === 'sh') {
       await shCommand.execute(interaction);
     }
     return;
@@ -135,6 +146,10 @@ client.on(Events.InteractionCreate, async (interaction) => {
       await handleSummarize(interaction);
     } else if (interaction.commandName === 'Explain') {
       await handleExplain(interaction);
+    } else if (interaction.commandName === 'To Latex') {
+      await handleToLatex(interaction);
+    } else if (interaction.commandName === 'To Latin') {
+      await handleToLatin(interaction);
     }
     return;
   }
@@ -152,6 +167,10 @@ client.on(Events.InteractionCreate, async (interaction) => {
   }
   if (interaction.isButton() && interaction.customId.startsWith('copy:')) {
     await handleCopy(interaction);
+    return;
+  }
+  if (interaction.isButton() && interaction.customId.startsWith('copy_translation:')) {
+    await handleCopyTranslation(interaction);
     return;
   }
   if (interaction.isButton() && interaction.customId.startsWith('regen:')) {

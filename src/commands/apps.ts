@@ -35,6 +35,7 @@ import {
   type PendingKind,
 } from '../pending.js';
 import { renderComponents, renderThinkingComponents, cleanAnswer } from '../render.js';
+import { toLatex, toLatin, renderTranslation } from './latin.js';
 
 function defaultPrompt(lang: Language): string {
   return lang === 'es' ? DEFAULT_PROMPT_ES : DEFAULT_PROMPT_EN;
@@ -471,4 +472,38 @@ export async function handleSummarize(interaction: MessageContextMenuCommandInte
 
 export async function handleExplain(interaction: MessageContextMenuCommandInteraction): Promise<void> {
   await runContextAction(interaction, 'explainPrompt');
+}
+
+export const toLatexCommand = new ContextMenuCommandBuilder()
+  .setName('To Latex')
+  .setType(ApplicationCommandType.Message)
+  .setIntegrationTypes([ApplicationIntegrationType.UserInstall, ApplicationIntegrationType.GuildInstall])
+  .setContexts([InteractionContextType.Guild, InteractionContextType.BotDM, InteractionContextType.PrivateChannel]);
+
+export const toLatinCommand = new ContextMenuCommandBuilder()
+  .setName('To Latin')
+  .setType(ApplicationCommandType.Message)
+  .setIntegrationTypes([ApplicationIntegrationType.UserInstall, ApplicationIntegrationType.GuildInstall])
+  .setContexts([InteractionContextType.Guild, InteractionContextType.BotDM, InteractionContextType.PrivateChannel]);
+
+export async function handleToLatex(interaction: MessageContextMenuCommandInteraction): Promise<void> {
+  const lang = getLanguage(interaction.user.id);
+  const targetContent = interaction.targetMessage.content || t(lang, 'noTextContent');
+  const result = toLatex(targetContent);
+  await replyComponents(
+    interaction,
+    renderTranslation(targetContent, result, 'latex', lang, interaction.guildId, interaction.channelId, interaction.targetMessage.id),
+    { ephemeral: true },
+  );
+}
+
+export async function handleToLatin(interaction: MessageContextMenuCommandInteraction): Promise<void> {
+  const lang = getLanguage(interaction.user.id);
+  const targetContent = interaction.targetMessage.content || t(lang, 'noTextContent');
+  const result = toLatin(targetContent);
+  await replyComponents(
+    interaction,
+    renderTranslation(targetContent, result, 'latin', lang, interaction.guildId, interaction.channelId, interaction.targetMessage.id),
+    { ephemeral: true },
+  );
 }

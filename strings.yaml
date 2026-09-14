@@ -120,6 +120,8 @@ responses:
     modelsPrev: '◀ Prev'
     modelsNext: 'Next ▶'
     modelsPage: 'Page'
+    translationToLatex: 'Translation to Latex'
+    translationToLatin: 'Translation to Latin'
   es:
     answerTruncated: '…'
     thinkingText: '{{0}} está pensando…'
@@ -179,3 +181,5 @@ responses:
     modelsPrev: '◀ Ant'
     modelsNext: 'Sig ▶'
     modelsPage: 'Página'
+    translationToLatex: 'Traducción a Latex'
+    translationToLatin: 'Traducción a Latin'

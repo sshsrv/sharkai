@@ -15,7 +15,6 @@ import {
   PROMPT_DISPLAY_MAX,
   CHARS_BUDGET,
   type Language,
-  LANGUAGE_CHOICES,
   languageLabel,
 } from '../config.js';
 import {
@@ -24,7 +23,6 @@ import {
   getPrompt,
   setPrompt,
   getLanguage,
-  setLanguage,
   appendHistory,
   clearHistory,
   resetUser,
@@ -109,10 +107,10 @@ function formatRelativeTime(iso: string | null): string {
   return rem > 0 ? `${hrs}h${rem}m` : `${hrs}h`;
 }
 
-export const shCommand = {
+export const aiCommand = {
   data: new SlashCommandBuilder()
-    .setName('sh')
-    .setDescription('SharkAI: all-in-one AI assistant')
+    .setName('ai')
+    .setDescription('SharkAI: AI assistant commands')
     .setIntegrationTypes([ApplicationIntegrationType.UserInstall, ApplicationIntegrationType.GuildInstall])
     .setContexts([InteractionContextType.Guild, InteractionContextType.BotDM, InteractionContextType.PrivateChannel])
     .addSubcommand((s) =>
@@ -153,18 +151,6 @@ export const shCommand = {
             .setDescription('Custom system prompt (empty string to reset)'),
         ),
     )
-    .addSubcommand((s) =>
-      s
-        .setName('language')
-        .setDescription('UI language (AI always answers in your language)')
-        .addStringOption((o) =>
-          o
-            .setName('language')
-            .setDescription('Language')
-            .setRequired(true)
-            .addChoices(...LANGUAGE_CHOICES),
-        ),
-    )
     .addSubcommand((s) => s.setName('models').setDescription('List all models with usage and privacy info'))
     .addSubcommand((s) => s.setName('usage').setDescription('Show detailed usage of your current model'))
     .addSubcommand((s) => s.setName('clear').setDescription('Clear your conversation history (start fresh context)'))
@@ -191,9 +177,6 @@ export const shCommand = {
         break;
       case 'set':
         await handleSet(interaction);
-        break;
-      case 'language':
-        await handleLanguage(interaction);
         break;
       case 'models':
         await handleModels(interaction);
@@ -353,23 +336,6 @@ async function handleSet(interaction: ChatInputCommandInteraction): Promise<void
     box([boxTitle(t(lang, key, m?.name ?? model))]),
   ];
   await replyComponents(interaction, components, { ephemeral: true });
-}
-
-async function handleLanguage(interaction: ChatInputCommandInteraction): Promise<void> {
-  const lang = interaction.options.getString('language', true) as Language;
-  if (!LANGUAGE_CHOICES.some((c) => c.value === lang)) {
-    await replyComponents(interaction, [text(t(getLanguage(interaction.user.id), 'invalidLanguage'))], {
-      ephemeral: true,
-    });
-    return;
-  }
-  const oldLang = getLanguage(interaction.user.id);
-  setLanguage(interaction.user.id, lang);
-  await replyComponents(
-    interaction,
-    [box([boxTitle(t(lang, 'h1LanguageSet', languageLabel(lang))), separator(), text(t(lang, 'languageChanged', languageLabel(oldLang), languageLabel(lang)))])],
-    { ephemeral: true },
-  );
 }
 
 async function handleModels(interaction: ChatInputCommandInteraction): Promise<void> {
