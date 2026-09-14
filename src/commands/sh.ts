@@ -115,7 +115,7 @@ async function handleLatex(interaction: ChatInputCommandInteraction): Promise<vo
   const result = toLatex(input);
   await replyComponents(
     interaction,
-    renderTranslation(input, result, 'latex', lang, interaction.guildId, interaction.channelId, null),
+    renderTranslation(input, result, 'latex', lang, interaction.guildId, interaction.channelId, null, interaction.user.id, visible),
     { ephemeral: !visible },
   );
 }
@@ -127,7 +127,7 @@ async function handleLatin(interaction: ChatInputCommandInteraction): Promise<vo
   const result = toLatin(input);
   await replyComponents(
     interaction,
-    renderTranslation(input, result, 'latin', lang, interaction.guildId, interaction.channelId, null),
+    renderTranslation(input, result, 'latin', lang, interaction.guildId, interaction.channelId, null, interaction.user.id, visible),
     { ephemeral: !visible },
   );
 }

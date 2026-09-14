@@ -492,7 +492,7 @@ export async function handleToLatex(interaction: MessageContextMenuCommandIntera
   const result = toLatex(targetContent);
   await replyComponents(
     interaction,
-    renderTranslation(targetContent, result, 'latex', lang, interaction.guildId, interaction.channelId, interaction.targetMessage.id),
+    renderTranslation(targetContent, result, 'latex', lang, interaction.guildId, interaction.channelId, interaction.targetMessage.id, interaction.user.id, false),
     { ephemeral: true },
   );
 }
@@ -503,7 +503,7 @@ export async function handleToLatin(interaction: MessageContextMenuCommandIntera
   const result = toLatin(targetContent);
   await replyComponents(
     interaction,
-    renderTranslation(targetContent, result, 'latin', lang, interaction.guildId, interaction.channelId, interaction.targetMessage.id),
+    renderTranslation(targetContent, result, 'latin', lang, interaction.guildId, interaction.channelId, interaction.targetMessage.id, interaction.user.id, false),
     { ephemeral: true },
   );
 }

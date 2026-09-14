@@ -1,10 +1,9 @@
 import { randomBytes } from 'node:crypto';
 import { ButtonInteraction } from 'discord.js';
 import { genId } from '../pending.js';
-import { replyComponents, text, type V2Component } from '../components.js';
+import { replyComponents, text, separator, button, actionRow, box, type V2Component } from '../components.js';
 import { t } from '../strings.js';
 import type { Language } from '../config.js';
-import { box } from '../components.js';
 
 // ── Character map (Changed game Latex alphabet) ──
 
@@ -36,10 +35,22 @@ export function toLatin(text: string): string {
   return [...text].map(ch => LATEX_TO_LATIN[ch] ?? ch).join('');
 }
 
-// ── Translation store (for copy button) ──
+// ── Translation store (for copy + make visible) ──
+
+interface TranslationData {
+  original: string;
+  translated: string;
+  direction: 'latex' | 'latin';
+  lang: Language;
+  guildId: string | null;
+  channelId: string;
+  targetMessageId: string | null;
+  authorId: string;
+  createdAt: number;
+}
 
 const TRANSLATION_TTL_MS = 2 * 60 * 60 * 1000;
-const translationStore = new Map<string, { text: string; createdAt: number }>();
+const translationStore = new Map<string, TranslationData>();
 
 setInterval(() => {
   const cutoff = Date.now() - TRANSLATION_TTL_MS;
@@ -48,10 +59,20 @@ setInterval(() => {
   }
 }, 10 * 60 * 1000).unref();
 
-function storeTranslation(text: string): string {
+function storeTranslation(data: Omit<TranslationData, 'createdAt'>): string {
   const id = genId();
-  translationStore.set(id, { text, createdAt: Date.now() });
+  translationStore.set(id, { ...data, createdAt: Date.now() });
   return id;
+}
+
+export function getTranslationData(id: string): TranslationData | undefined {
+  const data = translationStore.get(id);
+  if (!data) return undefined;
+  if (Date.now() - data.createdAt > TRANSLATION_TTL_MS) {
+    translationStore.delete(id);
+    return undefined;
+  }
+  return data;
 }
 
 // ── Render helpers ──
@@ -64,34 +85,61 @@ export function renderTranslation(
   guildId: string | null,
   channelId: string,
   targetMessageId: string | null,
+  authorId: string,
+  visible: boolean,
 ): V2Component[] {
-  const translationId = storeTranslation(translated);
+  const translationId = storeTranslation({ original, translated, direction, lang, guildId, channelId, targetMessageId, authorId });
   const typeLabel = direction === 'latex' ? t(lang, 'translationToLatex') : t(lang, 'translationToLatin');
 
   const header = targetMessageId
     ? `# [${original}](https://discord.com/channels/${guildId ?? '@me'}/${channelId}/${targetMessageId})`
     : `# ${original}`;
 
-  return [box([
+  const content: V2Component[] = [
     text(header),
     text(`-# ${typeLabel}`),
-    text('---'),
+    separator(),
     text(translated),
-  ]),
-  // action row with copy button
-  { type: 1, components: [
-    { type: 2, style: 2, label: t(lang, 'copyButton'), custom_id: `copy_translation:${translationId}` },
-  ]},
   ];
+
+  const buttons: V2Component[] = [
+    button(t(lang, 'copyButton'), `copy_translation:${translationId}`, 2),
+  ];
+
+  if (!visible) {
+    buttons.push(button(t(lang, 'makeVisible'), `make_visible_translation:${translationId}`, 2));
+  }
+
+  const row = actionRow(...buttons);
+
+  if (visible) return [box(content), row];
+  return [box(content), row];
 }
 
 export async function handleCopyTranslation(interaction: ButtonInteraction): Promise<void> {
   const contentId = interaction.customId.split(':')[1];
-  const data = contentId ? translationStore.get(contentId) : undefined;
-  if (!data || Date.now() - data.createdAt > TRANSLATION_TTL_MS) {
+  const data = contentId ? getTranslationData(contentId) : undefined;
+  if (!data) {
     await replyComponents(interaction, [text('Not available (expired).')], { ephemeral: true });
     return;
   }
-  const codeBlock = `\`\`\`\n${data.text}\n\`\`\``;
+  const codeBlock = `\`\`\`\n${data.translated}\n\`\`\``;
   await replyComponents(interaction, [text(codeBlock)], { ephemeral: true });
+}
+
+export async function handleMakeVisibleTranslation(interaction: ButtonInteraction): Promise<void> {
+  const contentId = interaction.customId.split(':')[1];
+  const data = contentId ? getTranslationData(contentId) : undefined;
+  if (!data) {
+    await replyComponents(interaction, [text('Not available (expired).')], { ephemeral: true });
+    return;
+  }
+  if (interaction.user.id !== data.authorId) {
+    await replyComponents(interaction, [text(t(data.lang, 'notAuthor'))], { ephemeral: true });
+    return;
+  }
+  await replyComponents(
+    interaction,
+    renderTranslation(data.original, data.translated, data.direction, data.lang, data.guildId, data.channelId, data.targetMessageId, data.authorId, true),
+  );
 }

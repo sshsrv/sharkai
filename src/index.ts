@@ -30,7 +30,7 @@ import {
   showAddContextModal,
   handleContextModal,
 } from './commands/apps.js';
-import { handleCopyTranslation } from './commands/latin.js';
+import { handleCopyTranslation, handleMakeVisibleTranslation } from './commands/latin.js';
 
 if (!env.discordToken) {
   console.error('❌ Falta DISCORD_TOKEN en el entorno');
@@ -171,6 +171,10 @@ client.on(Events.InteractionCreate, async (interaction) => {
   }
   if (interaction.isButton() && interaction.customId.startsWith('copy_translation:')) {
     await handleCopyTranslation(interaction);
+    return;
+  }
+  if (interaction.isButton() && interaction.customId.startsWith('make_visible_translation:')) {
+    await handleMakeVisibleTranslation(interaction);
     return;
   }
   if (interaction.isButton() && interaction.customId.startsWith('regen:')) {
