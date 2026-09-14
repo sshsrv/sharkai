@@ -271,12 +271,11 @@ export async function handleAskModal(interaction: ModalSubmitInteraction): Promi
   const modelId = getModel(interaction.user.id);
   const model = MODELS[modelId] ?? MODELS[DEFAULT_MODEL];
 
-  const newPrompt =
-    `The user is asking about the following conversation:\n\n` +
-    `Original message: "${data.targetContent}"\n\n` +
-    `AI response:\n${data.text}\n\n` +
-    `User follow-up question: ${followUp}\n\n` +
-    `Answer the user's follow-up question directly and concisely. Use the conversation above as context, but respond naturally as if answering a new question.`;
+  const history = data.kind === 'ask' ? [] : [
+    `Original: "${data.targetContent}"`,
+    `AI: ${data.text}`,
+  ];
+  const newPrompt = [...history, followUp].join('\n\n');
 
   await deferComponents(interaction, { ephemeral: !data.visible });
 
