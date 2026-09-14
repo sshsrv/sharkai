@@ -11,9 +11,9 @@ import {
   TextInputStyle,
   MessageContextMenuCommandInteraction,
 } from 'discord.js';
-import { MODELS, DEFAULT_MODEL, DEFAULT_PROMPT_EN, DEFAULT_PROMPT_ES, REGEN_COOLDOWN_MS, LAST_ASK_TTL_MS } from '../config.js';
+import { MODELS, DEFAULT_MODEL, REGEN_COOLDOWN_MS, LAST_ASK_TTL_MS } from '../config.js';
 import { t } from '../strings.js';
-import { getModel, getPrompt, getLanguage } from '../store.js';
+import { getModel, getLanguage } from '../store.js';
 import { ask } from '../providers.js';
 import { recordRequest, getModelUsage } from '../usage.js';
 import { modelEmoji } from '../display.js';
@@ -36,10 +36,6 @@ import {
 } from '../pending.js';
 import { renderComponents, renderThinkingComponents, cleanAnswer } from '../render.js';
 import { toLatex, toLatin, renderTranslation } from './latin.js';
-
-function defaultPrompt(lang: Language): string {
-  return lang === 'es' ? DEFAULT_PROMPT_ES : DEFAULT_PROMPT_EN;
-}
 
 const regenLast = new Map<string, number>();
 setInterval(() => {
@@ -64,11 +60,9 @@ async function runContextAction(
 ): Promise<void> {
   const lang = getLanguage(interaction.user.id);
   const modelId = getModel(interaction.user.id);
-  const customPrompt = getPrompt(interaction.user.id);
   const model = MODELS[modelId] ?? MODELS[DEFAULT_MODEL];
-  const promptBase = customPrompt || defaultPrompt(lang);
   const targetContent = interaction.targetMessage.content || t(lang, 'noTextContent');
-  const fullPrompt = `${promptBase}\n\n${t(lang, promptTemplateKey, targetContent)}`;
+  const fullPrompt = t(lang, promptTemplateKey, targetContent);
 
   const thinkingEmoji = modelEmoji(model.id);
 
@@ -197,10 +191,9 @@ export async function handleRegen(interaction: ButtonInteraction): Promise<void>
     }));
 
     let fullPrompt: string;
-    if (data.kind === 'factCheckPrompt' || data.kind === 'replyPrompt') {
-      const promptBase = getPrompt(interaction.user.id) || defaultPrompt(lang);
+    if (data.kind === 'factCheckPrompt' || data.kind === 'replyPrompt' || data.kind === 'summarizePrompt' || data.kind === 'explainPrompt') {
       if (data.promptTemplateKey) {
-        fullPrompt = `${promptBase}\n\n${t(lang, data.promptTemplateKey, data.targetContent)}`;
+        fullPrompt = t(lang, data.promptTemplateKey, data.targetContent);
       } else {
         fullPrompt = data.originalPrompt;
       }
