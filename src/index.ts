@@ -58,6 +58,8 @@ const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.DirectMessages, GatewayIntentBits.MessageContent],
 });
 
+console.log('🔗 Gateway intents:', client.options.intents);
+
 client.once(Events.ClientReady, async (c) => {
   console.log(`✅ SharkAI logueado como ${c.user.tag}`);
   try {
@@ -205,6 +207,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 });
 
 client.on(Events.MessageCreate, async (message) => {
+  console.log(`[RAW] MessageCreate: author=${message.author.id} channel=${message.channel.type} guild=${message.guildId ?? 'null'}`);
   try {
     await handleMessage(message);
   } catch (err) {
