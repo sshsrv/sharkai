@@ -8,6 +8,8 @@ import { t } from '../strings.js';
 const BASE_TYPING_MS = 2000;
 const PER_CHAR_TYPING_MS = 3;
 const MAX_TYPING_MS = 6000;
+const PRE_TYPING_MIN_MS = 500;
+const PRE_TYPING_MAX_MS = 2000;
 const INTER_MESSAGE_DELAY_MS = 800;
 const IDLE_NUDGE_MS = 2 * 60 * 60 * 1000;
 const NUDGE_COOLDOWN_MS = 24 * 60 * 60 * 1000;
@@ -41,7 +43,13 @@ function splitText(text: string): string[] {
 }
 
 function typingDurationMs(text: string): number {
-  return Math.min(BASE_TYPING_MS + text.length * PER_CHAR_TYPING_MS, MAX_TYPING_MS);
+  const base = BASE_TYPING_MS + text.length * PER_CHAR_TYPING_MS;
+  const jitter = base * (0.7 + Math.random() * 0.6);
+  return Math.min(Math.round(jitter), MAX_TYPING_MS);
+}
+
+function preTypingDelayMs(): number {
+  return PRE_TYPING_MIN_MS + Math.round(Math.random() * (PRE_TYPING_MAX_MS - PRE_TYPING_MIN_MS));
 }
 
 async function simulateTyping(channel: { sendTyping: () => Promise<void> }, durationMs: number): Promise<void> {
@@ -92,6 +100,7 @@ export async function handleMessage(message: Message): Promise<void> {
     const chunks = splitText(result.text);
 
     if ('sendTyping' in message.channel) {
+      await new Promise(resolve => setTimeout(resolve, preTypingDelayMs()));
       const totalText = chunks.join(' ');
       const duration = typingDurationMs(totalText);
       await simulateTyping(message.channel, duration);
@@ -105,6 +114,7 @@ export async function handleMessage(message: Message): Promise<void> {
           await message.reply({ content: chunks[i], allowedMentions: { repliedUser: true } });
         }
       } else {
+        await new Promise(resolve => setTimeout(resolve, preTypingDelayMs()));
         if ('sendTyping' in message.channel) {
           const duration = typingDurationMs(chunks[i]);
           await simulateTyping(message.channel, duration);
