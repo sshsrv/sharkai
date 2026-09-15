@@ -30,6 +30,7 @@ import {
 import { ask, fetchGroqUsage, getObservedLimits } from '../providers.js';
 import { recordRequest, getModelUsage } from '../usage.js';
 import { t } from '../strings.js';
+import { extractMemory, getMemoryInfo } from '../memory.js';
 import {
   V2Component,
   replyComponents,
@@ -159,7 +160,8 @@ export const aiCommand = {
     .addSubcommand((s) => s.setName('models').setDescription('List all models with usage and privacy info'))
     .addSubcommand((s) => s.setName('usage').setDescription('Show detailed usage of your current model'))
     .addSubcommand((s) => s.setName('clear').setDescription('Clear your conversation history (start fresh context)'))
-    .addSubcommand((s) => s.setName('reset').setDescription('Reset all your settings to defaults')),
+    .addSubcommand((s) => s.setName('reset').setDescription('Reset all your settings to defaults'))
+    .addSubcommand((s) => s.setName('memory').setDescription('See what SharkAI remembers about you')),
 
   async execute(interaction: ChatInputCommandInteraction | AutocompleteInteraction): Promise<void> {
     if (interaction.isAutocomplete()) {
@@ -194,6 +196,9 @@ export const aiCommand = {
         break;
       case 'reset':
         await handleReset(interaction);
+        break;
+      case 'memory':
+        await handleMemory(interaction);
         break;
       default:
         await replyComponents(
@@ -247,6 +252,7 @@ async function handleAsk(interaction: ChatInputCommandInteraction): Promise<void
 
     recordRequest(result.provider, result.model);
     const mu = getModelUsage(model);
+    extractMemory(interaction.user.id, question, result.text, ask).catch(() => {});
 
     const contentId = genId();
     setPendingData(contentId, {
@@ -605,4 +611,23 @@ async function handleReset(interaction: ChatInputCommandInteraction): Promise<vo
     [box([boxTitle(t(lang, 'h1Reset')), separator(), text(t(lang, 'resetBody', model, promptDisplay, languageLabel(lang)))])],
     { ephemeral: true },
   );
+}
+
+async function handleMemory(interaction: ChatInputCommandInteraction): Promise<void> {
+  const lang = getLanguage(interaction.user.id);
+  const info = getMemoryInfo(interaction.user.id);
+  const components: V2Component[] = [boxTitle(t(lang, 'memoryTitle'))];
+
+  if (info.facts.length === 0 && info.summaries.length === 0) {
+    components.push(separator(), text(t(lang, 'memoryEmpty')));
+  } else {
+    if (info.facts.length > 0) {
+      components.push(separator(), text(`**${t(lang, 'memoryFacts')}**\n${info.facts.map(f => `- ${f}`).join('\n')}`));
+    }
+    if (info.summaries.length > 0) {
+      components.push(separator(), text(`**${t(lang, 'memorySummaries')}**\n${info.summaries.map(s => `- ${s}`).join('\n')}`));
+    }
+  }
+
+  await replyComponents(interaction, [box(components)], { ephemeral: true });
 }

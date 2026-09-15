@@ -125,6 +125,10 @@ responses:
     emptyMention: 'mrrp? you called? :3'
     lateNightGreeting: 'zzz... oh, you''re still up? :3'
     morningGreeting: 'good morning :3 *yawns*'
+    memoryTitle: 'What SharkAI Knows About You'
+    memoryFacts: 'Facts'
+    memorySummaries: 'Recent Conversations'
+    memoryEmpty: 'I don''t know much about you yet. Chat with me more and I''ll remember things!'
   es:
     answerTruncated: '…'
     thinkingText: '{{0}} está pensando…'
@@ -189,3 +193,7 @@ responses:
     emptyMention: '¿mrrp? ¿me llamaste? :3'
     lateNightGreeting: 'zzz... oh, ¿todavía estás despierto? :3'
     morningGreeting: 'buenos días :3 *bostezos*'
+    memoryTitle: 'Lo que SharkAI Sabe de Ti'
+    memoryFacts: 'Datos'
+    memorySummaries: 'Conversaciones Recientes'
+    memoryEmpty: 'No sé mucho de ti todavía. ¡Chatea conmigo más y recordaré cosas!'

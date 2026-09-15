@@ -4,6 +4,7 @@ import { recordRequest } from '../usage.js';
 import { appendHistory, getLanguage } from '../store.js';
 import { WHITELIST_USER_IDS } from '../config.js';
 import { t } from '../strings.js';
+import { extractMemory } from '../memory.js';
 
 const BASE_TYPING_MS = 2000;
 const PER_CHAR_TYPING_MS = 3;
@@ -96,6 +97,7 @@ export async function handleMessage(message: Message): Promise<void> {
     recordRequest(result.provider, result.model);
     appendHistory(userId, 'user', question);
     appendHistory(userId, 'assistant', result.text);
+    extractMemory(userId, question, result.text, ask).catch(() => {});
 
     const chunks = splitText(result.text);
 

@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { env, MODELS, DEFAULT_PROMPT_EN, DEFAULT_PROMPT_ES, AI_TEMPERATURE, AI_MAX_TOKENS, HISTORY_MESSAGE_LIMIT, OBSERVED_LIMITS_TTL_MS, type Provider } from './config.js';
 import { getModel, getPrompt, getLanguage, getHistory } from './store.js';
+import { buildMemoryContext } from './memory.js';
 
 const GROQ_ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions';
 const GOOGLE_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models';
@@ -287,10 +288,16 @@ async function googleComplete(
   };
 }
 
+const MEMORY_PROMPT_SUFFIX =
+  '\n\n## User Memory\n{{0}}\n\nUse the above memory to personalize your responses. Reference these facts naturally — don\'t mention that you have memory or that you\'re using stored information. If the user asks what you know about them, share the relevant facts openly. Your memory makes each conversation feel more personal — you remember who people are.';
+
 function buildSystemPrompt(userId: string): string {
   const custom = getPrompt(userId);
   const lang = getLanguage(userId);
-  return custom || (lang === 'en' ? DEFAULT_PROMPT_EN : DEFAULT_PROMPT_ES);
+  const basePrompt = custom || (lang === 'en' ? DEFAULT_PROMPT_EN : DEFAULT_PROMPT_ES);
+  const memoryContext = buildMemoryContext(userId);
+  if (!memoryContext) return basePrompt;
+  return basePrompt + MEMORY_PROMPT_SUFFIX.replace('{{0}}', memoryContext);
 }
 
 function buildMessages(userId: string, question: string): ChatMessage[] {
