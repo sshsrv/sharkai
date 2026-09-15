@@ -7,42 +7,34 @@ import { t } from '../strings.js';
 
 const MESSAGE_DELAY_MS = 1500;
 const LINE_MAX = 2000;
-const FOLLOWUP_CHANCE = 0.2;
-const FOLLOWUP_DELAY_MIN_MS = 5000;
-const FOLLOWUP_DELAY_MAX_MS = 10000;
 const IDLE_NUDGE_MS = 2 * 60 * 60 * 1000;
 const NUDGE_COOLDOWN_MS = 24 * 60 * 60 * 1000;
 
 const lastInteraction = new Map<string, number>();
 const lastNudge = new Map<string, number>();
 
-const FOLLOWUPS = [
-  'oh also, mrrp :3',
-  'wait did i mention i like sharks? :3',
-  'also you should totally try Changed btw',
-  'mrrp, forgot to say :3',
-  'oh wait, one more thing :3',
-  'btw :3',
-  '*sneaks back in* mrrp',
-  'also also :3',
-  'oh and another thing x3',
-  'wait hold on, mreow :3',
-];
-
 function splitText(text: string): string[] {
-  const raw = text.split('\n');
+  const paragraphs = text.split('\n\n');
   const chunks: string[] = [];
-  let current = '';
 
-  for (const line of raw) {
-    if ((current.length + line.length + 1) > LINE_MAX && current.length > 0) {
-      chunks.push(current);
-      current = line;
+  for (const para of paragraphs) {
+    if (para.length <= LINE_MAX) {
+      chunks.push(para);
     } else {
-      current = current ? current + '\n' + line : line;
+      const lines = para.split('\n');
+      let current = '';
+      for (const line of lines) {
+        if ((current.length + line.length + 1) > LINE_MAX && current.length > 0) {
+          chunks.push(current);
+          current = line;
+        } else {
+          current = current ? current + '\n' + line : line;
+        }
+      }
+      if (current) chunks.push(current);
     }
   }
-  if (current) chunks.push(current);
+
   return chunks;
 }
 
@@ -93,15 +85,9 @@ export async function handleMessage(message: Message): Promise<void> {
     const chunks = splitText(result.text);
     const duration = typingDurationMs(result.text);
 
-    if ('sendTyping' in message.channel) {
-      const elapsed = Date.now() - Date.now() + duration;
-      const remaining = Math.max(0, duration - 1000);
-      if (remaining > 0) {
-        await new Promise(resolve => setTimeout(resolve, remaining));
-        if ('sendTyping' in message.channel) {
-          await message.channel.sendTyping();
-        }
-      }
+    if (duration > 1500 && 'sendTyping' in message.channel) {
+      await new Promise(resolve => setTimeout(resolve, Math.min(duration - 1000, 5000)));
+      await message.channel.sendTyping();
     }
 
     if (isDM) {
@@ -112,33 +98,16 @@ export async function handleMessage(message: Message): Promise<void> {
         await message.channel.send(chunks[i]);
       }
     } else {
-      let lastSent: Message | null = null;
       for (let i = 0; i < chunks.length; i++) {
         if (i > 0) {
           await new Promise(resolve => setTimeout(resolve, MESSAGE_DELAY_MS));
         }
         if (i === 0) {
-          lastSent = await message.reply({ content: chunks[i], allowedMentions: { repliedUser: true } });
+          await message.reply({ content: chunks[i], allowedMentions: { repliedUser: true } });
         } else if ('send' in message.channel) {
-          lastSent = await message.channel.send({ content: chunks[i], allowedMentions: { repliedUser: false } });
+          await message.channel.send({ content: chunks[i] });
         }
       }
-    }
-
-    if (Math.random() < FOLLOWUP_CHANCE) {
-      const delay = FOLLOWUP_DELAY_MIN_MS + Math.random() * (FOLLOWUP_DELAY_MAX_MS - FOLLOWUP_DELAY_MIN_MS);
-      const followup = FOLLOWUPS[Math.floor(Math.random() * FOLLOWUPS.length)];
-      setTimeout(async () => {
-        try {
-          if ('send' in message.channel) {
-            if (isDM) {
-              await message.channel.send(followup);
-            } else {
-              await message.channel.send({ content: followup });
-            }
-          }
-        } catch {}
-      }, delay);
     }
   } catch (err) {
     const errorMsg = err instanceof Error ? err.message : String(err);
