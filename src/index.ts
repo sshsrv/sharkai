@@ -31,7 +31,7 @@ import {
   handleContextModal,
 } from './commands/apps.js';
 import { handleCopyTranslation, handleMakeVisibleTranslation } from './commands/latin.js';
-import { handleMessage } from './commands/dms.js';
+import { handleMessage, checkIdleNudge } from './commands/dms.js';
 
 if (!env.discordToken) {
   console.error('❌ Falta DISCORD_TOKEN en el entorno');
@@ -145,6 +145,8 @@ client.once(Events.ClientReady, async (c) => {
   if (statuses.length > 1 && PRESENCE_ROTATION_SECONDS > 0) {
     setInterval(applyPresence, PRESENCE_ROTATION_SECONDS * 1000).unref();
   }
+
+  checkIdleNudge(client);
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {
