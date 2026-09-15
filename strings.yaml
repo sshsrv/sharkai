@@ -122,6 +122,9 @@ responses:
     modelsPage: 'Page'
     translationToLatex: 'Translation to Latex'
     translationToLatin: 'Translation to Latin'
+    emptyMention: 'mrrp? you called? :3'
+    lateNightGreeting: 'zzz... oh, you''re still up? :3'
+    morningGreeting: 'good morning :3 *yawns*'
   es:
     answerTruncated: '…'
     thinkingText: '{{0}} está pensando…'
@@ -183,3 +186,6 @@ responses:
     modelsPage: 'Página'
     translationToLatex: 'Traducción a Latex'
     translationToLatin: 'Traducción a Latin'
+    emptyMention: '¿mrrp? ¿me llamaste? :3'
+    lateNightGreeting: 'zzz... oh, ¿todavía estás despierto? :3'
+    morningGreeting: 'buenos días :3 *bostezos*'

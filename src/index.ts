@@ -97,9 +97,27 @@ client.once(Events.ClientReady, async (c) => {
   };
 
   const baseStatus: PresenceStatusData = statusMap[PRESENCE_STATUS] ?? 'online';
+
+  function getTimeOfDayStatuses(): string[] {
+    const hour = new Date().getHours();
+    if (hour >= 2 && hour < 6) {
+      return ['zzz... coding in my sleep', 'nocturnal shark hours', '3am thoughts :3', 'whitelist only. 🦈'];
+    }
+    if (hour >= 6 && hour < 12) {
+      return ['good morning :3', 'just woke up', 'morning coding session', 'whitelist only. 🦈'];
+    }
+    if (hour >= 12 && hour < 18) {
+      return ['i bite. 🦈', 'active and bitey', 'afternoon mrrp :3', 'whitelist only. 🦈'];
+    }
+    if (hour >= 18 && hour < 22) {
+      return ['evening vibes :3', 'chilling in dms', 'slava ssh. 🦈', 'whitelist only. 🦈'];
+    }
+    return ['zzz... late night coding', 'still here :3', 'nocturnal mode activated', 'whitelist only. 🦈'];
+  }
+
   const statuses: ActivitiesOptions[] = PRESENCE_CUSTOM_STATUSES.length > 0
     ? PRESENCE_CUSTOM_STATUSES.map(s => ({ name: 'Custom Status', type: ActivityType.Custom, state: s }))
-    : [{ name: 'Custom Status', type: ActivityType.Custom, state: 'SharkAI 🦈' }];
+    : getTimeOfDayStatuses().map(s => ({ name: 'Custom Status', type: ActivityType.Custom, state: s }));
 
   if (PRESENCE_STATUS === 'streaming' && PRESENCE_STREAMING_URL) {
     statuses.unshift({ name: 'SharkAI', type: ActivityType.Streaming, url: PRESENCE_STREAMING_URL });
@@ -108,6 +126,13 @@ client.once(Events.ClientReady, async (c) => {
   let statusIndex = 0;
 
   const applyPresence = () => {
+    if (PRESENCE_CUSTOM_STATUSES.length === 0) {
+      statuses.length = 0;
+      statuses.push(...getTimeOfDayStatuses().map(s => ({ name: 'Custom Status', type: ActivityType.Custom, state: s })));
+      if (PRESENCE_STATUS === 'streaming' && PRESENCE_STREAMING_URL) {
+        statuses.unshift({ name: 'SharkAI', type: ActivityType.Streaming, url: PRESENCE_STREAMING_URL });
+      }
+    }
     c.user.setPresence({
       activities: [statuses[statusIndex % statuses.length]],
       status: baseStatus,
